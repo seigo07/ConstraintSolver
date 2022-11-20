@@ -51,7 +51,8 @@ public final class BinaryCSPReader {
       }
       ArrayList<BinaryConstraint> constraints = readBinaryConstraints();
       ArrayList<Variable> variables = generateVariables(domainBounds);
-      BinaryCSP csp = new BinaryCSP(domainBounds, constraints, variables);
+      ConstraintList constraintList = generateConstraintList(constraints, variables);
+      BinaryCSP csp = new BinaryCSP(domainBounds, constraints, variables, constraintList);
       // TESTING:
       // System.out.println(csp) ;
       inFR.close();
@@ -117,5 +118,56 @@ public final class BinaryCSPReader {
     }
 
     return variables;
+  }
+
+  /**
+   * Generate constraintList from constraints and variables
+   */
+  public ConstraintList generateConstraintList(ArrayList<BinaryConstraint> constraints, ArrayList<Variable> variables) {
+    ConstraintList cl = new ConstraintList();
+
+    for (BinaryConstraint b : constraints) {
+      Variable var1 = new Variable();
+      Variable var2 = new Variable();
+
+      HashMap<Variable, int[]> v1 = new HashMap<>();
+      HashMap<Variable, int[]> v2 = new HashMap<>();
+
+      for (Variable v11 : variables) {
+        if (v11.getId() == b.getFirstVar()) {
+          var1 = v11;
+        }
+
+        if (v11.getId() == b.getSecondVar()) {
+          var2 = v11.getCopy();
+          var2 = v11;
+        }
+      }
+
+      int[] var1Values = new int[b.getTuples().size()];
+      int[] var2Values = new int[b.getTuples().size()];
+
+      /*
+       * ToDo: Make sure that when adding the domain values, each value is a unique
+       * objects
+       */
+      for (int counter = 0; counter < b.getTuples().size(); counter++) {
+        int i = -1;
+        String[] ret = null;
+        ret = b.getTuples().get(counter).toString2().split(",");
+        i = Integer.parseInt(ret[0]);
+        var1Values[counter] = i;
+        var2Values[counter] = (Integer.parseInt(ret[1]));
+      }
+
+      v1.put(var1, var1Values);
+      v2.put(var2, var2Values);
+
+      Constraint c = new Constraint(v1, v2);
+
+      cl.add(c);
+    }
+
+    return cl;
   }
 }

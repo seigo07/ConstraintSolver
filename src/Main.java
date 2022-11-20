@@ -32,10 +32,10 @@ public class Main {
         String varOrder = args[2];
         String valOrder = args[3];
 
-        System.out.println("fileName=" + fileName);
-        System.out.println("algorithm=" + algorithm);
-        System.out.println("varOrder=" + varOrder);
-        System.out.println("valOrder=" + valOrder);
+        // System.out.println("fileName=" + fileName);
+        // System.out.println("algorithm=" + algorithm);
+        // System.out.println("varOrder=" + varOrder);
+        // System.out.println("valOrder=" + valOrder);
 
         // Get csp from file
         BinaryCSP bcsp = Solver.getCSP(fileName);

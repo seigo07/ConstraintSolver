@@ -24,7 +24,6 @@ public class Solver {
         // Initialize and read csp from file
         BinaryCSPReader bcspr = new BinaryCSPReader();
         BinaryCSP bcsp = bcspr.readBinaryCSP(filePath);
-        bcsp = BinaryCSP.getConstraints(bcsp);
         return bcsp;
     }
 
