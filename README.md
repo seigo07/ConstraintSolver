@@ -17,6 +17,6 @@ Employing 2-way branching with both the Forward Checking and the Maintaining Arc
 
 * Please run the following command
 ```
-cd P2
-java -jar P2.jar csps/4Queens.csp fc sdf asc
+cd P2/src
+jar -cvfm outputs/P2.jar outputs/p2.mf *.class
 ```

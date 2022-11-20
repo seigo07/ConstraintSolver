@@ -4,6 +4,7 @@ import java.util.stream.IntStream;
 public final class BinaryCSP {
   private int[][] domainBounds;
   private ArrayList<BinaryConstraint> constraints;
+  // NEWS
   private ArrayList<Variable> variables;
   private ConstraintList constraintList;
 
@@ -122,6 +123,11 @@ public final class BinaryCSP {
 
   public ArrayList<BinaryConstraint> getConstraints() {
     return constraints;
+  }
+
+  // TODO delete
+  public int[][] getDomainBounds() {
+    return domainBounds;
   }
 
   // NEWS

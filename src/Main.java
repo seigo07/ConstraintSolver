@@ -37,7 +37,7 @@ public class Main {
         System.out.println("varOrder=" + varOrder);
         System.out.println("valOrder=" + valOrder);
 
-        // Read the CSP from the CSP files
+        // Get csp from file
         BinaryCSP bcsp = Solver.getCSP(fileName);
 
         // Instantiate a Solver Class
