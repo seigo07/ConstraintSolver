@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.stream.IntStream;
 
 public final class BinaryCSP {
   private int[][] domainBounds;
@@ -124,6 +125,10 @@ public final class BinaryCSP {
   }
 
   // NEWS
+  public ArrayList<Variable> getNewVariables() {
+    return variables;
+  }
+
   public ConstraintList getConstraintList() {
     return constraintList;
   }
