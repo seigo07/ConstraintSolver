@@ -20,7 +20,7 @@ public class Variable {
     private ArrayList<Integer> mostRecentlyPruned = new ArrayList<Integer>();
     private ArrayList<Integer> mostRecentlyMarked = new ArrayList<Integer>();
     private int value = -1;
-    private int[] previously_assigned;
+    private int[] getPreviouslyAssigned;
 
     // ToDo: We might also need to keep a list of previously assigned values
 
@@ -31,6 +31,10 @@ public class Variable {
     }
 
     public Variable() {
+    }
+
+    public int[] getPreviouslyAssigned() {
+        return getPreviouslyAssigned;
     }
 
     /**
@@ -85,7 +89,7 @@ public class Variable {
         this.value = value;
 
         // add the value to the list of previously assigned values
-        previously_assigned = this.add(previously_assigned, value);
+        getPreviouslyAssigned = this.add(getPreviouslyAssigned, value);
         // marked = null;
     }
 
@@ -192,7 +196,7 @@ public class Variable {
 
         for (int v : domain) {
             if (v < lowest
-                    && !this.contains(this.previously_assigned, v)
+                    && !this.contains(this.getPreviouslyAssigned, v)
                     && !this.isMarked(v)) {
                 lowest = v;
             }
@@ -212,7 +216,7 @@ public class Variable {
 
         for (int v : domain) {
             if (v > max
-                    && !this.contains(this.previously_assigned, v)
+                    && !this.contains(this.getPreviouslyAssigned, v)
                     && !this.isMarked(v)) {
 
                 max = v;

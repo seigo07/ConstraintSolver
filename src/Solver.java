@@ -135,7 +135,7 @@ public class Solver {
         } else {
             // Pick var and value
             Variable var = selectVar();
-            int value = var.getMaxValInDomain();
+            int value = selectVal(var);
             // Branching
             branchFCLeft(var, value);
             branchFCRight(var, value);
@@ -246,7 +246,17 @@ public class Solver {
     /**
      * Select a value from the domain
      */
-    private void selectVal(Variable var) {
+    private int selectVal(Variable var) {
+        int max = -1;
+        for (int d : var.getDomain()) {
+            if (d > max
+                    && !var.contains(var.getPreviouslyAssigned(), d)
+                    && !var.isMarked(d)) {
+
+                max = d;
+            }
+        }
+        return max;
     }
 
     private void branchFCLeft(Variable var, int value) {
