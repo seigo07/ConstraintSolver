@@ -8,34 +8,10 @@ public final class BinaryCSP {
   private ArrayList<Variable> variables;
   private ConstraintList constraintList;
 
-  public BinaryCSP(int[][] db, ArrayList<BinaryConstraint> c) {
+  public BinaryCSP(int[][] db, ArrayList<BinaryConstraint> c, ArrayList<Variable> v) {
     domainBounds = db;
     constraints = c;
-  }
-
-  // NEWS
-  /** Returns an arrayList list of variables */
-  public static BinaryCSP getVariables(BinaryCSP csp) {
-    ArrayList<Variable> variables = new ArrayList<Variable>();
-
-    for (int i = 0; i < csp.domainBounds.length; i++) {
-      Variable v = new Variable(i);
-      // HashSet<Integer> dom = new HashSet<Integer>();
-      // int[] dom = new int[csp.domainBounds[i][1]];
-      // Arrays.fill(dom,csp.domainBounds[i][0], csp.domainBounds[i][1] );
-      int[] dom = IntStream.range(0, csp.domainBounds[i][1] + 1).toArray();
-
-      /**
-       * for (int k = csp.domainBounds[i][0]; k <= csp.domainBounds[i][1]; k++) {
-       * //v.addToDomain(Integer.valueOf(k)); dom[k] = k; }
-       */
-      v.addDomain(dom);
-      variables.add(v);
-    }
-
-    csp.addVariables(variables);
-
-    return csp;
+    variables = v;
   }
 
   // NEWS
@@ -123,11 +99,6 @@ public final class BinaryCSP {
 
   public ArrayList<BinaryConstraint> getConstraints() {
     return constraints;
-  }
-
-  // TODO delete
-  public int[][] getDomainBounds() {
-    return domainBounds;
   }
 
   // NEWS

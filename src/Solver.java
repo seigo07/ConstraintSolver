@@ -35,12 +35,6 @@ public class Solver {
         // Initialize and read csp from file
         BinaryCSPReader bcspr = new BinaryCSPReader();
         BinaryCSP bcsp = bcspr.readBinaryCSP(filePath);
-        System.out.println("getNoVariables" + bcsp.getNoVariables());
-        System.out.println("getLB" + bcsp.getLB(0));
-        System.out.println("getUB" + bcsp.getUB(0));
-        System.out.println("getConstraints" + bcsp.getConstraints());
-        System.out.println("getDomainBounds" + bcsp.getDomainBounds());
-        bcsp = BinaryCSP.getVariables(bcsp);
         bcsp = BinaryCSP.getConstraints(bcsp);
         return bcsp;
     }

@@ -1,24 +1,25 @@
-import java.io.* ;
-import java.util.* ;
+import java.io.*;
+import java.util.*;
+import java.util.stream.IntStream;
 
 /**
  * A reader tailored for binary extensional CSPs.
  * It is created from a FileReader and a StreamTokenizer
  */
 public final class BinaryCSPReader {
-  private FileReader inFR ;
-  private StreamTokenizer in ;
+  private FileReader inFR;
+  private StreamTokenizer in;
 
   /**
    * Main (for testing)
    */
   public static void main(String[] args) {
     if (args.length != 1) {
-      System.out.println("Usage: java BinaryCSPReader <file.csp>") ;
-      return ;
+      System.out.println("Usage: java BinaryCSPReader <file.csp>");
+      return;
     }
-    BinaryCSPReader reader = new BinaryCSPReader() ;
-	  System.out.println(reader.readBinaryCSP(args[0])) ;
+    BinaryCSPReader reader = new BinaryCSPReader();
+    System.out.println(reader.readBinaryCSP(args[0]));
   }
 
   /**
@@ -34,68 +35,90 @@ public final class BinaryCSPReader {
    */
   public BinaryCSP readBinaryCSP(String fn) {
     try {
-      inFR = new FileReader(fn) ;
-      in = new StreamTokenizer(inFR) ;
-      in.ordinaryChar('(') ;
-      in.ordinaryChar(')') ;
-      in.nextToken() ;                                         // n
-      int n = (int)in.nval ;
-      int[][] domainBounds = new int[n][2] ;
+      inFR = new FileReader(fn);
+      in = new StreamTokenizer(inFR);
+      in.ordinaryChar('(');
+      in.ordinaryChar(')');
+      in.nextToken(); // n
+      int n = (int) in.nval;
+      int[][] domainBounds = new int[n][2];
       for (int i = 0; i < n; i++) {
-	      in.nextToken() ;                                  // ith ub
-	      domainBounds[i][0] = (int)in.nval ;
-		    in.nextToken() ;                                   // ','
-		    in.nextToken() ;
-	      domainBounds[i][1] = (int)in.nval ;
+        in.nextToken(); // ith ub
+        domainBounds[i][0] = (int) in.nval;
+        in.nextToken(); // ','
+        in.nextToken();
+        domainBounds[i][1] = (int) in.nval;
       }
-      ArrayList<BinaryConstraint> constraints = readBinaryConstraints() ;
-      BinaryCSP csp = new BinaryCSP(domainBounds, constraints) ;
+      ArrayList<BinaryConstraint> constraints = readBinaryConstraints();
+      ArrayList<Variable> variables = generateVariables(domainBounds);
+      BinaryCSP csp = new BinaryCSP(domainBounds, constraints, variables);
       // TESTING:
       // System.out.println(csp) ;
-      inFR.close() ;
-      return csp ;
+      inFR.close();
+      return csp;
+    } catch (FileNotFoundException e) {
+      System.out.println(e);
+    } catch (IOException e) {
+      System.out.println(e);
     }
-    catch (FileNotFoundException e) {System.out.println(e);}
-    catch (IOException e) {System.out.println(e);}
-    return null ;
+    return null;
   }
 
   /**
    *
    */
   private ArrayList<BinaryConstraint> readBinaryConstraints() {
-    ArrayList<BinaryConstraint> constraints = new ArrayList<BinaryConstraint>() ;
-	
-    try {
-      in.nextToken() ;                                  //'c' or EOF
-      while(in.ttype != in.TT_EOF) {
-	      // scope
-	      in.nextToken() ;                                       //'('
-		    in.nextToken() ;                                       //var
-	      int var1 = (int)in.nval ;
-		    in.nextToken() ;                                       //','
-		    in.nextToken() ;                                       //var
-        int var2 = (int)in.nval ;
-		    in.nextToken() ;                                       //')'
+    ArrayList<BinaryConstraint> constraints = new ArrayList<BinaryConstraint>();
 
-        //tuples
-		    ArrayList<BinaryTuple> tuples = new ArrayList<BinaryTuple>() ;
-        in.nextToken() ;              //1st allowed val of 1st tuple
+    try {
+      in.nextToken(); // 'c' or EOF
+      while (in.ttype != in.TT_EOF) {
+        // scope
+        in.nextToken(); // '('
+        in.nextToken(); // var
+        int var1 = (int) in.nval;
+        in.nextToken(); // ','
+        in.nextToken(); // var
+        int var2 = (int) in.nval;
+        in.nextToken(); // ')'
+
+        // tuples
+        ArrayList<BinaryTuple> tuples = new ArrayList<BinaryTuple>();
+        in.nextToken(); // 1st allowed val of 1st tuple
         while (!"c".equals(in.sval) && (in.ttype != in.TT_EOF)) {
-          int val1 = (int)in.nval ;
-	        in.nextToken() ;                                   //','
-	        in.nextToken() ;                               //2nd val
-		      int val2 = (int)in.nval ;
-		      tuples.add(new BinaryTuple(val1, val2)) ;
-		      in.nextToken() ;      //1stallowed val of next tuple/c/EOF
-		    }
-        BinaryConstraint c = new BinaryConstraint(var1, var2, tuples) ;
-        constraints.add(c) ;
+          int val1 = (int) in.nval;
+          in.nextToken(); // ','
+          in.nextToken(); // 2nd val
+          int val2 = (int) in.nval;
+          tuples.add(new BinaryTuple(val1, val2));
+          in.nextToken(); // 1stallowed val of next tuple/c/EOF
+        }
+        BinaryConstraint c = new BinaryConstraint(var1, var2, tuples);
+        constraints.add(c);
       }
-	  
-      return constraints ;
+
+      return constraints;
+    } catch (IOException e) {
+      System.out.println(e);
     }
-    catch (IOException e) {System.out.println(e);}
-    return null ;  
+    return null;
+  }
+
+  /**
+   * Generate variables from domainBounds
+   * 
+   * @param domainBounds
+   */
+  public ArrayList<Variable> generateVariables(int[][] domainBounds) {
+    ArrayList<Variable> variables = new ArrayList<Variable>();
+
+    for (int i = 0; i < domainBounds.length; i++) {
+      Variable v = new Variable(i);
+      int[] dom = IntStream.range(0, domainBounds[i][1] + 1).toArray();
+      v.addDomain(dom);
+      variables.add(v);
+    }
+
+    return variables;
   }
 }
