@@ -88,9 +88,9 @@ public final class BinaryCSPReader {
         domainBounds[i][1] = (int) in.nval;
       }
       ArrayList<BinaryConstraint> constraints = readBinaryConstraints();
-      ArrayList<Variable> variables = generateVariables(domainBounds);
-      ConstraintList constraintList = generateConstraintList(constraints, variables);
-      BinaryCSP csp = new BinaryCSP(domainBounds, constraints, variables, constraintList);
+      ArrayList<Variable> varList = generateVarList(domainBounds);
+      ConstraintList constraintList = generateConstraintList(constraints, varList);
+      BinaryCSP csp = new BinaryCSP(domainBounds, constraints, varList, constraintList);
       // TESTING:
       // System.out.println(csp) ;
       inFR.close();
@@ -146,7 +146,7 @@ public final class BinaryCSPReader {
   /**
    * Generate variables from domainBounds
    */
-  public ArrayList<Variable> generateVariables(int[][] domainBounds) {
+  public ArrayList<Variable> generateVarList(int[][] domainBounds) {
 
     ArrayList<Variable> variables = new ArrayList<Variable>();
     for (int i = 0; i < domainBounds.length; i++) {
