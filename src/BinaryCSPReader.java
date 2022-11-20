@@ -110,12 +110,11 @@ public final class BinaryCSPReader {
    * @param domainBounds
    */
   public ArrayList<Variable> generateVariables(int[][] domainBounds) {
-    ArrayList<Variable> variables = new ArrayList<Variable>();
 
+    ArrayList<Variable> variables = new ArrayList<Variable>();
     for (int i = 0; i < domainBounds.length; i++) {
-      Variable v = new Variable(i);
-      int[] dom = IntStream.range(0, domainBounds[i][1] + 1).toArray();
-      v.addDomain(dom);
+      int[] d = IntStream.range(0, domainBounds[i][1] + 1).toArray();
+      Variable v = new Variable(i, d);
       variables.add(v);
     }
 

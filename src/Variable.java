@@ -24,26 +24,13 @@ public class Variable {
 
     // ToDo: We might also need to keep a list of previously assigned values
 
-    public Variable(int id) {
+    public Variable(int id, int[] d) {
         this.id = id;
         this.depth = 0;
+        this.domain = d;
     }
 
     public Variable() {
-    }
-
-    /**
-     * Add an integer value to the domain of the variable
-     *
-     * @param
-     */
-    // public void addToDomain(Integer a) {
-    // domain.add(Integer.valueOf(a));
-    // }
-
-    /** @param dom an array of ints */
-    public void addDomain(int[] dom) {
-        this.domain = dom;
     }
 
     /**
@@ -130,7 +117,7 @@ public class Variable {
     }
 
     public Variable getCopy() {
-        Variable new_var = new Variable(this.id);
+        Variable new_var = new Variable(this.id, this.domain);
         new_var.setDomain(this.getDomain());
         // new_var.setPruned(this.getPruned());
         return new_var;
