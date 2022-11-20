@@ -39,7 +39,6 @@ public final class BinaryCSP {
     return constraints;
   }
 
-  // NEWS
   public ArrayList<Variable> getVariables() {
     return variables;
   }

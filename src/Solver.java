@@ -11,38 +11,32 @@ public class Solver {
     private final LinkedList<Variable> pruned = new LinkedList<>();
     private final LinkedList<Variable> marked = new LinkedList<>();
 
-    // Constructor for Solver class
+    /**
+     * Constructor
+     */
     public Solver(BinaryCSP csp) {
         this.csp = csp;
     }
 
     /**
-     * Read cspfile and generate and return csp instance through BinaryCSPReader
+     * Run solver
      */
-    public static BinaryCSP getCSP(String filePath) {
-
-        // Initialize and read csp from file
-        BinaryCSPReader bcspr = new BinaryCSPReader();
-        BinaryCSP bcsp = bcspr.readBinaryCSP(filePath);
-        return bcsp;
-    }
-
-    // Solve the CSP
-    public void solve(String algorithm) {
-        System.out.println("Solved" + this.solution.size());
-
+    public void run(String algorithm) {
         if (algorithm.contentEquals("fc")) {
-            ForwardChecking(this.csp);
+            forwardChecking(this.csp);
         } else if (algorithm.contentEquals("mac")) {
-            MAC3();
+            mac();
+        } else {
+            System.out.println("Usage: fc or mac for args[1]");
         }
     }
 
     /** Loop through all the variables and print out their assignments */
-    public void get_solutions() {
+    public void getSolutions() {
         for (Variable v : csp.getVariables()) {
             System.out.println("Variable " + v.getId() + " is assigned: " + v.getValue());
         }
+        System.out.println("The number of solution:" + this.solution.size());
     }
 
     /**
@@ -51,13 +45,13 @@ public class Solver {
      * @param csp A csp.BinaryCSP object representing an instance of the problem to
      *            be solved
      */
-    public void ForwardChecking(BinaryCSP csp) {
+    public void forwardChecking(BinaryCSP csp) {
 
         Variable var;
         int value;
 
         if (isCompleteAssignment() == true) {
-            get_solutions();
+            getSolutions();
         } else {
             // Select the variables and their values
             var = selectVariable(csp, "M");
@@ -101,7 +95,7 @@ public class Solver {
     /**
      * Solves a CSP using the maintaining arc consistency(MAC) algorithm
      */
-    public void MAC3() {
+    public void mac() {
 
         // get a value from the list of variables and a value from its domain
         Variable var = selectVariable(this.csp, "M");
@@ -110,14 +104,14 @@ public class Solver {
         var.assign(value);
 
         if (isCompleteAssignment()) {
-            get_solutions();
+            getSolutions();
         }
         // if problem is arc consistent, recursively call MAC again
         // I don't provide a list of variables as an argument because the selectVariable
         // method does that at the
         // start of the MAC method
         else if (ac3()) {
-            MAC3();
+            mac();
         }
 
         // If we're in this branch, then the problem is not arc consistent
@@ -131,7 +125,7 @@ public class Solver {
 
         if (!var.isDomainEmpty()) {
             if (ac3() == true) {
-                MAC3();
+                mac();
             }
 
             undoPruning();
@@ -263,7 +257,7 @@ public class Solver {
 
             // Do forward checking on the rest of the UNASSIGNED variables
             id_sequences.clear();
-            ForwardChecking(csp);
+            forwardChecking(csp);
         }
 
         undoPruning();
@@ -286,7 +280,7 @@ public class Solver {
         if (!var.isDomainEmpty()) {
             if (reviseFutureArcs(futureVars, var) == true) { // reviseFutureArcs(ArrayList<Variable> futureVars,
                                                              // Variable v)
-                ForwardChecking(csp);
+                forwardChecking(csp);
             } else {
                 undoPruning();
             }

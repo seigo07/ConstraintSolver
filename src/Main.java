@@ -37,18 +37,13 @@ public class Main {
         // System.out.println("varOrder=" + varOrder);
         // System.out.println("valOrder=" + valOrder);
 
-        // Get csp from file
-        BinaryCSP bcsp = Solver.getCSP(fileName);
+        // Instantiate a BinaryCSP through BinaryCSPReader
+        BinaryCSPReader bcspr = new BinaryCSPReader();
+        BinaryCSP bcsp = bcspr.readBinaryCSP(fileName);
 
-        // Instantiate a Solver Class
-        Solver csp_solver = new Solver(bcsp);
-
-        // Solve the CSP using the specified algorithm
-        csp_solver.solve(algorithm);
-
-        // Get the results of the solution
-        csp_solver.get_solutions();
-
-        System.out.println("end of program");
+        // Instantiate a Solver to run solver
+        Solver solver = new Solver(bcsp);
+        solver.run(algorithm);
+        solver.getSolutions();
     }
 }
