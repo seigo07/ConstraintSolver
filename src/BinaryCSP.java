@@ -16,7 +16,7 @@ public final class BinaryCSP {
 
   // NEWS
   public static BinaryCSP getConstraints(BinaryCSP csp) {
-    ArrayList<Variable> variables = csp.getNewVariables();
+    ArrayList<Variable> variables = csp.getVariables();
     ConstraintList cl = new ConstraintList();
 
     for (BinaryConstraint b : csp.constraints) {
@@ -102,16 +102,12 @@ public final class BinaryCSP {
   }
 
   // NEWS
-  public ArrayList<Variable> getNewVariables() {
+  public ArrayList<Variable> getVariables() {
     return variables;
   }
 
   public ConstraintList getConstraintList() {
     return constraintList;
-  }
-
-  private void addVariables(ArrayList<Variable> v) {
-    variables = v;
   }
 
   private void addConstrainList(ConstraintList c) {

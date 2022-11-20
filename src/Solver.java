@@ -17,18 +17,7 @@ public class Solver {
     }
 
     /**
-     * THis method parses the file provided as argument and extracts the provided
-     * constraints into a
-     * csp.BinaryCSP object. It only takes the name of the file. Depending on the
-     * name of the file, the
-     * program will look search the right sub-folder under the "CSPs" folder. For
-     * instance, if the
-     * file name has the word sudoku, then the method will look into the CSPS ->
-     * Sudoku folder for the
-     * the right file
-     *
-     * @param filePath the name of the CSP file
-     * @return
+     * Read cspfile and generate and return csp instance through BinaryCSPReader
      */
     public static BinaryCSP getCSP(String filePath) {
 
@@ -52,7 +41,7 @@ public class Solver {
 
     /** Loop through all the variables and print out their assignments */
     public void get_solutions() {
-        for (Variable v : csp.getNewVariables()) {
+        for (Variable v : csp.getVariables()) {
             System.out.println("Variable " + v.getId() + " is assigned: " + v.getValue());
         }
     }
@@ -102,7 +91,7 @@ public class Solver {
     private boolean isCompleteAssignment() {
         // go through all the variables and check if they've all been assigned
 
-        for (Variable v : csp.getNewVariables()) {
+        for (Variable v : csp.getVariables()) {
             if (v.isAssigned() == false) {
                 return false;
             }
@@ -169,9 +158,9 @@ public class Solver {
         switch (method) {
             // Strategy a: Ascending or, first unassigned variable
             case "A":
-                for (int i = 0; i < csp.getNewVariables().size(); i++) {
-                    if (!csp.getNewVariables().get(i).isAssigned()) {
-                        selectedVar = csp.getNewVariables().get(i);
+                for (int i = 0; i < csp.getVariables().size(); i++) {
+                    if (!csp.getVariables().get(i).isAssigned()) {
+                        selectedVar = csp.getVariables().get(i);
                     }
                 }
                 break;
@@ -182,9 +171,9 @@ public class Solver {
                 int i;
                 do {
                     rand = new Random();
-                    i = rand.nextInt(this.csp.getNewVariables().size());
-                } while (csp.getNewVariables().get(i).isAssigned() == true);
-                selectedVar = csp.getNewVariables().get(i);
+                    i = rand.nextInt(this.csp.getVariables().size());
+                } while (csp.getVariables().get(i).isAssigned() == true);
+                selectedVar = csp.getVariables().get(i);
                 break;
 
             // Strategy c: Most constrained variable first.ie. the variable with the most
@@ -194,7 +183,7 @@ public class Solver {
                 selectedVar = null;
                 int max_connections = -1;
                 // go through the list of unassigned variables
-                for (Variable v : csp.getNewVariables()) {
+                for (Variable v : csp.getVariables()) {
                     if (!v.isAssigned()) {
                         int num_connections = 0;
 
@@ -220,7 +209,7 @@ public class Solver {
                 selectedVar = null;
                 smallest_domain = 1000;
                 // check the size of the domain for each unassigned variable
-                for (Variable v : csp.getNewVariables()) {
+                for (Variable v : csp.getVariables()) {
                     if (!v.isAssigned()) {
                         if (v.getDomain().length < smallest_domain) {
                             smallest_domain = v.getDomain().length;
@@ -237,7 +226,7 @@ public class Solver {
                 selectedVar = null;
                 smallest_domain = 1000;
                 // check the size of the domain for each unassigned variable
-                for (Variable v : csp.getNewVariables()) {
+                for (Variable v : csp.getVariables()) {
                     if (!v.isAssigned()) {
                         if (v.getDomain().length < smallest_domain) {
                             smallest_domain = v.getDomain().length;
@@ -492,7 +481,7 @@ public class Solver {
         }
 
         for (int i = 0; i < id_sequences.size(); i++) {
-            for (Variable vv : this.csp.getNewVariables()) {
+            for (Variable vv : this.csp.getVariables()) {
                 if (id_sequences.getLast() == vv.getId()) {
                     vv.undoMarking();
                 }

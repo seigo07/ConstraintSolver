@@ -106,8 +106,6 @@ public final class BinaryCSPReader {
 
   /**
    * Generate variables from domainBounds
-   * 
-   * @param domainBounds
    */
   public ArrayList<Variable> generateVariables(int[][] domainBounds) {
 
