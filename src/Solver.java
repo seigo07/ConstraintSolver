@@ -120,9 +120,11 @@ public class Solver {
      */
     public void printSolutions() {
         for (Variable v : varList) {
+            this.solution.add(v.getValue());
             System.out.println("Variable " + v.getId() + " is assigned: " + v.getValue());
         }
         System.out.println("The number of solution:" + this.solution.size());
+        System.out.println("solution:" + this.solution);
     }
 
     /**
@@ -135,10 +137,10 @@ public class Solver {
         } else {
             // Pick var and value
             Variable var = selectVar();
-            int value = selectVal(var);
+            int val = selectVal(var);
             // Branching
-            branchFCLeft(var, value);
-            branchFCRight(var, value);
+            branchFCLeft(var, val);
+            branchFCRight(var, val);
         }
     }
 
@@ -202,7 +204,6 @@ public class Solver {
     /**
      * select an assignment variable from a varList
      */
-
     private Variable selectVar() {
 
         Variable selectedVar = null;
@@ -247,6 +248,7 @@ public class Solver {
      * Select a value from the domain
      */
     private int selectVal(Variable var) {
+
         int max = -1;
         for (int d : var.getDomain()) {
             if (d > max
@@ -259,57 +261,59 @@ public class Solver {
         return max;
     }
 
-    private void branchFCLeft(Variable var, int value) {
-        // From lecture 7_1: An assigned variable has been assigned by a
-        // left branch
-        this.mode = 1;
-        boolean consistent = false;
+    /**
+     * Assigned variables are assigned by branchFCLeft
+     */
+    private void branchFCLeft(Variable var, int val) {
 
-        // Assign the value to the variable
-        var.assign(value);
-        System.out.println("Variable " + var.getId() + " is assigned " + value);
+        this.mode = 1;
+
+        // Assign the value
+        var.assign(val);
+        System.out.println("Variable " + var.getId() + " is assigned " + val);
 
         // get the list of future variables
-        ArrayList<Variable> futureVars = getFutureVars(csp, var);
+        ArrayList<Variable> futureVars = getFutureVars(var);
 
-        // revise future arcs
-        consistent = reviseFutureArcs(futureVars, var);
-
-        if (consistent == true) {
+        if (reviseFutureArcs(futureVars, var)) {
 
             // Do forward checking on the rest of the UNASSIGNED variables
             id_sequences.clear();
             forwardChecking();
         }
 
+        // reverses the changes made by reviseFutureArcs
         undoPruning();
         var.unassign();
         System.out.println("End of branch left");
     }
 
-    private void branchFCRight(Variable var, int value) {
+    /**
+     * Assigned variables are assigned by branchFCRight
+     */
+    private void branchFCRight(Variable var, int val) {
+
         this.mode = 2;
-        // From lecture 7_1: An assigned variable can only be assigned by branchLeft
-        var.delete(value);
+        var.delete(val);
         var.savePrune();
 
-        ArrayList<Variable> futureVars = getFutureVars(csp, var);
+        ArrayList<Variable> futureVars = getFutureVars(var);
 
         // for(Variable v: futureVars){
         // v.undoMarking();
         // }
 
         if (!var.isDomainEmpty()) {
-            if (reviseFutureArcs(futureVars, var) == true) { // reviseFutureArcs(ArrayList<Variable> futureVars,
-                                                             // Variable v)
+            if (reviseFutureArcs(futureVars, var)) {
                 forwardChecking();
             } else {
                 undoPruning();
             }
         } else {
-            var.assign(value);
+            var.assign(val);
         }
-    } // end branchRight
+        System.out.println("End of branch right");
+    }
 
     /**
      * Get a list of all constraints where the variable v is connected
@@ -317,7 +321,7 @@ public class Solver {
      * @param csp
      * @param root
      */
-    private ArrayList<Variable> getFutureVars(BinaryCSP csp, Variable root) {
+    private ArrayList<Variable> getFutureVars(Variable root) {
 
         // get the list of all future variables
         ArrayList<Variable> futureVars = new ArrayList<Variable>();
