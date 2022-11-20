@@ -128,7 +128,7 @@ public class Solver {
     }
 
     /**
-     * FC: 2-way version
+     * FC 2-way version
      */
     public void forwardChecking() {
         if (completeAssignment()) {
@@ -158,15 +158,14 @@ public class Solver {
     }
 
     /**
-     * Solves a CSP using the maintaining arc consistency(MAC) algorithm
+     * Maintaining arc consistency
      */
     public void mac() {
 
-        // get a value from the list of variables and a value from its domain
+        // Get a value from varList and a value from its domain
         Variable var = selectVar();
-        int value = var.getMaxValInDomain();
-        // assign the value to the variable
-        var.assign(value);
+        int val = selectVal(var);
+        var.assign(val);
 
         if (completeAssignment()) {
             printSolutions();
@@ -180,24 +179,22 @@ public class Solver {
         }
 
         // If we're in this branch, then the problem is not arc consistent
-
-        // undo pruning
         undoPruning();
         var.unassign();
-        var.prune(value); // this has the same function of removing the value from the domain of the
-                          // variable
-        var.savePrune(); // remember to call this function after all pruning is done
+        // this has the same function of removing the value from the domain of the
+        // variable
+        var.prune(val);
+        // remember to call this function after all pruning is done
+        var.savePrune();
 
         if (!var.isDomainEmpty()) {
-            if (ac3() == true) {
+            if (ac3()) {
                 mac();
             }
-
             undoPruning();
-
         }
-
-        var.undoPruning(); // replaces the value which was most recently removed from the domain of var
+        // replaces the value which was most recently removed from the domain of var
+        var.undoPruning();
 
     }
 
@@ -272,12 +269,12 @@ public class Solver {
         var.assign(val);
         System.out.println("Variable " + var.getId() + " is assigned " + val);
 
-        // get the list of future variables
+        // Get future variables
         ArrayList<Variable> futureVars = getFutureVars(var);
 
         if (reviseFutureArcs(futureVars, var)) {
 
-            // Do forward checking on the rest of the UNASSIGNED variables
+            // Forward checking for the rest of the unassigned variables
             id_sequences.clear();
             forwardChecking();
         }
@@ -317,61 +314,18 @@ public class Solver {
 
     /**
      * Get a list of all constraints where the variable v is connected
-     *
-     * @param csp
-     * @param root
      */
     private ArrayList<Variable> getFutureVars(Variable root) {
 
-        // get the list of all future variables
+        // Get all future variables
         ArrayList<Variable> futureVars = new ArrayList<Variable>();
 
         for (Constraint c : constraintList) {
-
             if (c.getFv().containsKey(root)) {
                 futureVars.add(c.getSecondVariable());
             }
         }
         return futureVars;
-    }
-
-    /**
-     * Get a list of all constraints where the variable v is connected
-     *
-     * @param csp
-     * @param root
-     */
-    private ArrayList<Variable> getFutureVars_old(BinaryCSP csp, Variable root) {
-
-        // get the list of all future variables
-        ArrayList<Variable> futureVars = new ArrayList<Variable>();
-        ArrayList<Variable> agenda = new ArrayList<Variable>();
-        agenda.add(root);
-
-        while (!agenda.isEmpty()) {
-            doGetFutureVars(agenda, futureVars, csp, root);
-        }
-        return futureVars;
-    }
-
-    // [DONE] ToDo: Revise this algorithm to get only nodes connected to the current
-    // variable
-    private void doGetFutureVars(
-            ArrayList<Variable> agenda, ArrayList<Variable> futureVars, BinaryCSP csp, Variable root) {
-        Variable v;
-
-        for (int i = 0; i < agenda.size(); i++) {
-            v = agenda.get(0);
-            agenda.remove(0);
-
-            for (Constraint c : constraintList) {
-
-                if (c.getFv().containsKey(v) && !futureVars.contains(c.getSecondVariable())) {
-                    futureVars.add(c.getSecondVariable());
-                    agenda.add(c.getSecondVariable());
-                }
-            }
-        }
     }
 
     /**
@@ -386,15 +340,12 @@ public class Solver {
      */
     private boolean reviseFutureArcs(ArrayList<Variable> futureVars, Variable v) {
         // execute the AC3 algorithm
-        boolean consistent;
-        consistent = ac3(futureVars, v);
-
         // if the domain does NOT contain the currently assigned variable, reset the
         // assignment
         // if(!ArrayUtils.contains(v.getDomain(), v.getValue()) && consistent){
         // v.unassign();
         // }
-        return consistent;
+        return ac3(futureVars, v);
     }
 
     /**
@@ -482,15 +433,8 @@ public class Solver {
         return false;
     }
 
-    private boolean checkConsistent(ArrayList<Variable> vars) {
-        // checks to see if any variable's domain has been emptied by revise
-        return false;
-    }
-
     /**
-     * Goes through the list of variables that were modified during the arc revision
-     * process and
-     * undoes their pruning
+     * Reverses the changes made by reviseFutureArcs
      */
     private void undoPruning() {
         Variable v;
@@ -570,59 +514,6 @@ public class Solver {
             }
         }
         return results;
-    }
-
-    /**
-     * Revise returns true if the value of the first variable in the arc(i.e. the
-     * left variable) has
-     * been changed Assuming also that empty domains are caught
-     *
-     * @param arc
-     * @return True if a change was made to the domain of the left variable(or first
-     *         variable) in the
-     *         arc, else false.
-     */
-    private boolean old_revise(Arc arc) {
-        boolean changed = false;
-        boolean supported = false;
-        ArrayList<Integer> prunedList = new ArrayList<>();
-        ArrayList<Integer> supported_values_in_sv;
-
-        // if domain is empty exit early
-        if (arc.getSv().isDomainEmpty()) {
-            return changed;
-        } else {
-            for (int v : arc.getSv().getDomain()) {
-
-                // for each integer in the domain of FV, find the list of valid values which it
-                // supports in
-                // the second variable, sv,
-                // based on the data in the list of constraints
-                supported_values_in_sv = constraintList.getConstraintsOn(v, arc);
-
-                // the arc is consistent iff AT LEAST ONE value in "supported_values_in_sv"
-                // can be found in the domain of SV
-                supported = arc.getSv().hasSupport(supported_values_in_sv);
-
-                if (supported == false) {
-
-                    // if there is no support, prune the current integer value from the domain of
-                    // the first
-                    // variable
-                    arc.getFv().prune(v); // remove from the domain
-                    changed = true;
-                }
-            } // endFor
-
-            // IMPORTANT!: Before exiting this method, remember to call .savePrune to store
-            // the pruned
-            // variables
-            // in the list of pruned variables. This step will enable us do backtracking
-            // properly
-            arc.getFv().savePrune();
-        } // end else
-
-        return changed;
     }
 
     /**
