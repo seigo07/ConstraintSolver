@@ -46,9 +46,9 @@ public class Solver {
     public void solve(String algorithm) {
         System.out.println("Solved" + this.solution.size());
 
-        if (algorithm.contentEquals("FC")) {
+        if (algorithm.contentEquals("fc")) {
             ForwardChecking(this.csp);
-        } else if (algorithm.contentEquals("MAC")) {
+        } else if (algorithm.contentEquals("mac")) {
             MAC3();
         }
     }
