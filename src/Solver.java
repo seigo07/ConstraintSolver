@@ -34,7 +34,7 @@ public class Solver {
     /**
      * Generate solutions from variables
      */
-    public void getSolutions() {
+    public void printSolutions() {
         for (Variable v : csp.getVariables()) {
             System.out.println("Variable " + v.getId() + " is assigned: " + v.getValue());
         }
@@ -46,33 +46,17 @@ public class Solver {
      */
     public void forwardChecking(BinaryCSP csp) {
 
-        Variable var;
-        int value;
-
         if (isCompleteAssignment() == true) {
-            getSolutions();
+            // Output solutions and finish
+            printSolutions();
         } else {
-            // Select the variables and their values
-            var = selectVariable(csp, "M");
-            value = var.getMaxValInDomain();
-
-            // Don't assign the value yet. All assignments are done in
-            // the branching functions.ie. branchLeft and branchRight
-
-            // branch left and right
+            // Pick var and value
+            Variable var = selectVariable(csp, "M");
+            int value = var.getMaxValInDomain();
+            // Branching
             branchFCLeft(csp, var, value);
             branchFCRight(csp, var, value);
         }
-
-        // Step 1: Select a variable from the agenda
-
-        // Step 2: Make an assignment to the one of the variables
-        // Step 2.1 Add that variable to the LIFO stack
-
-        // Step 3: Revise all arcs from every future variable to the selected variable
-        // once
-        // 3.1 Find all variables that are connected to the one we just assigned
-
     }
 
     /**
@@ -103,7 +87,7 @@ public class Solver {
         var.assign(value);
 
         if (isCompleteAssignment()) {
-            getSolutions();
+            printSolutions();
         }
         // if problem is arc consistent, recursively call MAC again
         // I don't provide a list of variables as an argument because the selectVariable

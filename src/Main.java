@@ -44,6 +44,6 @@ public class Main {
         // Instantiate a Solver to run solver
         Solver solver = new Solver(bcsp);
         solver.run(algorithm);
-        solver.getSolutions();
+        solver.printSolutions();
     }
 }
