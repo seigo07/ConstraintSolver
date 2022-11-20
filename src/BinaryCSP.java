@@ -3,13 +3,13 @@ import java.util.*;
 public final class BinaryCSP {
   private int[][] domainBounds;
   private ArrayList<BinaryConstraint> constraints;
-  private ArrayList<Variable> variables;
+  private ArrayList<Variable> varList;
   private ConstraintList constraintList;
 
   public BinaryCSP(int[][] db, ArrayList<BinaryConstraint> c, ArrayList<Variable> v, ConstraintList cl) {
     domainBounds = db;
     constraints = c;
-    variables = v;
+    varList = v;
     constraintList = cl;
   }
 
@@ -39,8 +39,8 @@ public final class BinaryCSP {
     return constraints;
   }
 
-  public ArrayList<Variable> getVariables() {
-    return variables;
+  public ArrayList<Variable> getVarList() {
+    return varList;
   }
 
   public ConstraintList getConstraintList() {

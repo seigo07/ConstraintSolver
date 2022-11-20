@@ -35,7 +35,7 @@ public class Solver {
      * Generate solutions from variables
      */
     public void printSolutions() {
-        for (Variable v : csp.getVariables()) {
+        for (Variable v : csp.getVarList()) {
             System.out.println("Variable " + v.getId() + " is assigned: " + v.getValue());
         }
         System.out.println("The number of solution:" + this.solution.size());
@@ -45,7 +45,6 @@ public class Solver {
      * FC: 2-way version
      */
     public void forwardChecking(BinaryCSP csp) {
-
         if (isCompleteAssignment() == true) {
             // Output solutions and finish
             printSolutions();
@@ -60,14 +59,11 @@ public class Solver {
     }
 
     /**
-     * Method to check if all variables have been assigned a value
-     *
-     * @return
+     * Check if all variables have been assigned with values
      */
     private boolean isCompleteAssignment() {
-        // go through all the variables and check if they've all been assigned
 
-        for (Variable v : csp.getVariables()) {
+        for (Variable v : csp.getVarList()) {
             if (v.isAssigned() == false) {
                 return false;
             }
@@ -134,9 +130,9 @@ public class Solver {
         switch (method) {
             // Strategy a: Ascending or, first unassigned variable
             case "A":
-                for (int i = 0; i < csp.getVariables().size(); i++) {
-                    if (!csp.getVariables().get(i).isAssigned()) {
-                        selectedVar = csp.getVariables().get(i);
+                for (int i = 0; i < csp.getVarList().size(); i++) {
+                    if (!csp.getVarList().get(i).isAssigned()) {
+                        selectedVar = csp.getVarList().get(i);
                     }
                 }
                 break;
@@ -147,9 +143,9 @@ public class Solver {
                 int i;
                 do {
                     rand = new Random();
-                    i = rand.nextInt(this.csp.getVariables().size());
-                } while (csp.getVariables().get(i).isAssigned() == true);
-                selectedVar = csp.getVariables().get(i);
+                    i = rand.nextInt(this.csp.getVarList().size());
+                } while (csp.getVarList().get(i).isAssigned() == true);
+                selectedVar = csp.getVarList().get(i);
                 break;
 
             // Strategy c: Most constrained variable first.ie. the variable with the most
@@ -159,7 +155,7 @@ public class Solver {
                 selectedVar = null;
                 int max_connections = -1;
                 // go through the list of unassigned variables
-                for (Variable v : csp.getVariables()) {
+                for (Variable v : csp.getVarList()) {
                     if (!v.isAssigned()) {
                         int num_connections = 0;
 
@@ -185,7 +181,7 @@ public class Solver {
                 selectedVar = null;
                 smallest_domain = 1000;
                 // check the size of the domain for each unassigned variable
-                for (Variable v : csp.getVariables()) {
+                for (Variable v : csp.getVarList()) {
                     if (!v.isAssigned()) {
                         if (v.getDomain().length < smallest_domain) {
                             smallest_domain = v.getDomain().length;
@@ -202,7 +198,7 @@ public class Solver {
                 selectedVar = null;
                 smallest_domain = 1000;
                 // check the size of the domain for each unassigned variable
-                for (Variable v : csp.getVariables()) {
+                for (Variable v : csp.getVarList()) {
                     if (!v.isAssigned()) {
                         if (v.getDomain().length < smallest_domain) {
                             smallest_domain = v.getDomain().length;
@@ -457,7 +453,7 @@ public class Solver {
         }
 
         for (int i = 0; i < id_sequences.size(); i++) {
-            for (Variable vv : this.csp.getVariables()) {
+            for (Variable vv : this.csp.getVarList()) {
                 if (id_sequences.getLast() == vv.getId()) {
                     vv.undoMarking();
                 }
