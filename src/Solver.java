@@ -31,7 +31,9 @@ public class Solver {
         }
     }
 
-    /** Loop through all the variables and print out their assignments */
+    /**
+     * Generate solutions from variables
+     */
     public void getSolutions() {
         for (Variable v : csp.getVariables()) {
             System.out.println("Variable " + v.getId() + " is assigned: " + v.getValue());
@@ -40,10 +42,7 @@ public class Solver {
     }
 
     /**
-     * Solves a CSP using the forward checking algorithm
-     *
-     * @param csp A csp.BinaryCSP object representing an instance of the problem to
-     *            be solved
+     * FC: 2-way version
      */
     public void forwardChecking(BinaryCSP csp) {
 
