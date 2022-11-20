@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.stream.IntStream;
 
 public class Solver {
     private final BinaryCSP csp;
@@ -11,11 +12,16 @@ public class Solver {
     private final LinkedList<Variable> pruned = new LinkedList<>();
     private final LinkedList<Variable> marked = new LinkedList<>();
 
+    private ArrayList<Variable> varList;
+    private ConstraintList constraintList;
+
     /**
      * Constructor
      */
     public Solver(BinaryCSP csp) {
         this.csp = csp;
+        varList = generateVarList(csp.getDomainBounds());
+        constraintList = generateConstraintList(csp.getConstraints(), varList);
     }
 
     /**
@@ -32,10 +38,77 @@ public class Solver {
     }
 
     /**
+     * Generate variables from domainBounds
+     */
+    public ArrayList<Variable> generateVarList(int[][] domainBounds) {
+
+        ArrayList<Variable> variables = new ArrayList<Variable>();
+        for (int i = 0; i < domainBounds.length; i++) {
+            int[] d = IntStream.range(0, domainBounds[i][1] + 1).toArray();
+            Variable v = new Variable(i, d);
+            variables.add(v);
+        }
+
+        return variables;
+    }
+
+    /**
+     * Generate constraintList from constraints and variables
+     */
+    public ConstraintList generateConstraintList(ArrayList<BinaryConstraint> constraints,
+            ArrayList<Variable> variables) {
+        ConstraintList cl = new ConstraintList();
+
+        for (BinaryConstraint b : constraints) {
+            Variable var1 = new Variable();
+            Variable var2 = new Variable();
+
+            HashMap<Variable, int[]> v1 = new HashMap<>();
+            HashMap<Variable, int[]> v2 = new HashMap<>();
+
+            for (Variable v11 : variables) {
+                if (v11.getId() == b.getFirstVar()) {
+                    var1 = v11;
+                }
+
+                if (v11.getId() == b.getSecondVar()) {
+                    var2 = v11.getCopy();
+                    var2 = v11;
+                }
+            }
+
+            int[] var1Values = new int[b.getTuples().size()];
+            int[] var2Values = new int[b.getTuples().size()];
+
+            /*
+             * ToDo: Make sure that when adding the domain values, each value is a unique
+             * objects
+             */
+            for (int counter = 0; counter < b.getTuples().size(); counter++) {
+                int i = -1;
+                String[] ret = null;
+                ret = b.getTuples().get(counter).toString2().split(",");
+                i = Integer.parseInt(ret[0]);
+                var1Values[counter] = i;
+                var2Values[counter] = (Integer.parseInt(ret[1]));
+            }
+
+            v1.put(var1, var1Values);
+            v2.put(var2, var2Values);
+
+            Constraint c = new Constraint(v1, v2);
+
+            cl.add(c);
+        }
+
+        return cl;
+    }
+
+    /**
      * Generate solutions from variables
      */
     public void printSolutions() {
-        for (Variable v : csp.getVarList()) {
+        for (Variable v : varList) {
             System.out.println("Variable " + v.getId() + " is assigned: " + v.getValue());
         }
         System.out.println("The number of solution:" + this.solution.size());
@@ -63,7 +136,7 @@ public class Solver {
      */
     private boolean isCompleteAssignment() {
 
-        for (Variable v : csp.getVarList()) {
+        for (Variable v : varList) {
             if (v.isAssigned() == false) {
                 return false;
             }
@@ -130,9 +203,9 @@ public class Solver {
         switch (method) {
             // Strategy a: Ascending or, first unassigned variable
             case "A":
-                for (int i = 0; i < csp.getVarList().size(); i++) {
-                    if (!csp.getVarList().get(i).isAssigned()) {
-                        selectedVar = csp.getVarList().get(i);
+                for (int i = 0; i < varList.size(); i++) {
+                    if (!varList.get(i).isAssigned()) {
+                        selectedVar = varList.get(i);
                     }
                 }
                 break;
@@ -143,9 +216,9 @@ public class Solver {
                 int i;
                 do {
                     rand = new Random();
-                    i = rand.nextInt(this.csp.getVarList().size());
-                } while (csp.getVarList().get(i).isAssigned() == true);
-                selectedVar = csp.getVarList().get(i);
+                    i = rand.nextInt(this.varList.size());
+                } while (varList.get(i).isAssigned() == true);
+                selectedVar = varList.get(i);
                 break;
 
             // Strategy c: Most constrained variable first.ie. the variable with the most
@@ -155,11 +228,11 @@ public class Solver {
                 selectedVar = null;
                 int max_connections = -1;
                 // go through the list of unassigned variables
-                for (Variable v : csp.getVarList()) {
+                for (Variable v : varList) {
                     if (!v.isAssigned()) {
                         int num_connections = 0;
 
-                        for (Constraint c : csp.getConstraintList()) {
+                        for (Constraint c : constraintList) {
                             if (c.getFirstVariable().getId() == (v.getId())) {
                                 num_connections += 1;
                             }
@@ -181,7 +254,7 @@ public class Solver {
                 selectedVar = null;
                 smallest_domain = 1000;
                 // check the size of the domain for each unassigned variable
-                for (Variable v : csp.getVarList()) {
+                for (Variable v : varList) {
                     if (!v.isAssigned()) {
                         if (v.getDomain().length < smallest_domain) {
                             smallest_domain = v.getDomain().length;
@@ -198,7 +271,7 @@ public class Solver {
                 selectedVar = null;
                 smallest_domain = 1000;
                 // check the size of the domain for each unassigned variable
-                for (Variable v : csp.getVarList()) {
+                for (Variable v : varList) {
                     if (!v.isAssigned()) {
                         if (v.getDomain().length < smallest_domain) {
                             smallest_domain = v.getDomain().length;
@@ -279,7 +352,7 @@ public class Solver {
         // get the list of all future variables
         ArrayList<Variable> futureVars = new ArrayList<Variable>();
 
-        for (Constraint c : csp.getConstraintList()) {
+        for (Constraint c : constraintList) {
 
             if (c.getFv().containsKey(root)) {
                 futureVars.add(c.getSecondVariable());
@@ -317,7 +390,7 @@ public class Solver {
             v = agenda.get(0);
             agenda.remove(0);
 
-            for (Constraint c : csp.getConstraintList()) {
+            for (Constraint c : constraintList) {
 
                 if (c.getFv().containsKey(v) && !futureVars.contains(c.getSecondVariable())) {
                     futureVars.add(c.getSecondVariable());
@@ -453,7 +526,7 @@ public class Solver {
         }
 
         for (int i = 0; i < id_sequences.size(); i++) {
-            for (Variable vv : this.csp.getVarList()) {
+            for (Variable vv : varList) {
                 if (id_sequences.getLast() == vv.getId()) {
                     vv.undoMarking();
                 }
@@ -517,7 +590,7 @@ public class Solver {
     private ArrayList<Variable> getVariablesIncidentOn(Variable v) {
         ArrayList<Variable> results = new ArrayList<>();
 
-        for (Constraint c : this.csp.getConstraintList()) {
+        for (Constraint c : constraintList) {
             if (c.getSecondVariable().equals(v)) {
                 results.add(c.getFirstVariable());
             }
@@ -551,7 +624,7 @@ public class Solver {
                 // supports in
                 // the second variable, sv,
                 // based on the data in the list of constraints
-                supported_values_in_sv = csp.getConstraintList().getConstraintsOn(v, arc);
+                supported_values_in_sv = constraintList.getConstraintsOn(v, arc);
 
                 // the arc is consistent iff AT LEAST ONE value in "supported_values_in_sv"
                 // can be found in the domain of SV
@@ -621,7 +694,7 @@ public class Solver {
             // check if the value in the domain has support in the second variable
             // supported_values_in_sv =
             // csp.getConstraintList().getConstraintsOn(arc.getFv().getValue(), arc);
-            supported_values_in_sv = csp.getConstraintList().getConstraintsOn(arc.getFv().getValue(), arc);
+            supported_values_in_sv = constraintList.getConstraintsOn(arc.getFv().getValue(), arc);
 
             // the arc is consistent iff AT LEAST ONE value in "supported_values_in_sv"
             // can be found in the domain of SV
@@ -695,7 +768,7 @@ public class Solver {
                 // check if the value in the domain has support in the second variable
                 // supported_values_in_sv =
                 // csp.getConstraintList().getConstraintsOn(arc.getFv().getValue(), arc);
-                supported_values_in_sv = csp.getConstraintList().getConstraintsOn(i, arc);
+                supported_values_in_sv = constraintList.getConstraintsOn(i, arc);
 
                 // the arc is consistent iff AT LEAST ONE value in "supported_values_in_sv"
                 // can be found in the domain of SV
