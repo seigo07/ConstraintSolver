@@ -15,11 +15,17 @@ public class Solver {
     private ArrayList<Variable> varList;
     private ConstraintList constraintList;
 
+    // Parameters
+    String varOrder;
+    String valOrder;
+
     /**
      * Constructor
      */
-    public Solver(BinaryCSP csp) {
+    public Solver(BinaryCSP csp, String varOrder, String valOrder) {
         this.csp = csp;
+        this.varOrder = varOrder;
+        this.valOrder = valOrder;
         varList = generateVarList(csp.getDomainBounds());
         constraintList = generateConstraintList(csp.getConstraints(), varList);
     }
@@ -28,12 +34,17 @@ public class Solver {
      * Run solver
      */
     public void run(String algorithm) {
-        if (algorithm.contentEquals("fc")) {
-            forwardChecking();
-        } else if (algorithm.contentEquals("mac")) {
-            mac();
-        } else {
-            System.out.println("Usage: fc or mac for args[1]");
+
+        switch (algorithm) {
+            case "fc":
+                forwardChecking();
+                break;
+            case "mac":
+                mac();
+                break;
+            default:
+                forwardChecking();
+                break;
         }
     }
 
@@ -118,23 +129,23 @@ public class Solver {
      * FC: 2-way version
      */
     public void forwardChecking() {
-        if (isCompleteAssignment() == true) {
+        if (completeAssignment()) {
             // Output solutions and finish
             printSolutions();
         } else {
             // Pick var and value
-            Variable var = selectVariable(csp, "M");
+            Variable var = selectVar();
             int value = var.getMaxValInDomain();
             // Branching
-            branchFCLeft(csp, var, value);
-            branchFCRight(csp, var, value);
+            branchFCLeft(var, value);
+            branchFCRight(var, value);
         }
     }
 
     /**
      * Check if all variables have been assigned with values
      */
-    private boolean isCompleteAssignment() {
+    private boolean completeAssignment() {
 
         for (Variable v : varList) {
             if (v.isAssigned() == false) {
@@ -150,12 +161,12 @@ public class Solver {
     public void mac() {
 
         // get a value from the list of variables and a value from its domain
-        Variable var = selectVariable(this.csp, "M");
+        Variable var = selectVar();
         int value = var.getMaxValInDomain();
         // assign the value to the variable
         var.assign(value);
 
-        if (isCompleteAssignment()) {
+        if (completeAssignment()) {
             printSolutions();
         }
         // if problem is arc consistent, recursively call MAC again
@@ -189,68 +200,25 @@ public class Solver {
     }
 
     /**
-     * Method to select a variable for assignment from a list of available variables
-     * in the agenda
-     * that have not been assigned Strategies: a. Ascending order(ie. first
-     * unassigned variable in the
-     * list) b. Random c. Most connected & unassigned variable first d. Smallest
-     * domain first
+     * select an assignment variable from a varList
      */
-    private Variable selectVariable(BinaryCSP csp, String method) {
+
+    private Variable selectVar() {
+
         Variable selectedVar = null;
         int smallest_domain = 1000;
 
-        switch (method) {
-            // Strategy a: Ascending or, first unassigned variable
-            case "A":
+        switch (varOrder) {
+            // Ascending or first unassigned variable in the list
+            case "asc":
                 for (int i = 0; i < varList.size(); i++) {
                     if (!varList.get(i).isAssigned()) {
                         selectedVar = varList.get(i);
                     }
                 }
                 break;
-
-            // Strategy b: Random unassigned variable
-            case "R":
-                Random rand;
-                int i;
-                do {
-                    rand = new Random();
-                    i = rand.nextInt(this.varList.size());
-                } while (varList.get(i).isAssigned() == true);
-                selectedVar = varList.get(i);
-                break;
-
-            // Strategy c: Most constrained variable first.ie. the variable with the most
-            // constraints on
-            // it
-            case "M":
-                selectedVar = null;
-                int max_connections = -1;
-                // go through the list of unassigned variables
-                for (Variable v : varList) {
-                    if (!v.isAssigned()) {
-                        int num_connections = 0;
-
-                        for (Constraint c : constraintList) {
-                            if (c.getFirstVariable().getId() == (v.getId())) {
-                                num_connections += 1;
-                            }
-                        }
-
-                        if (num_connections > max_connections) {
-                            max_connections = num_connections;
-                            selectedVar = v;
-                        }
-                    }
-                }
-                break;
-
             // Strategy d: Smallest domain first
-            // Make sure access the current state of the variables to ensure that the
-            // decision is being
-            // made
-            case "S":
+            case "sdf":
                 selectedVar = null;
                 smallest_domain = 1000;
                 // check the size of the domain for each unassigned variable
@@ -262,34 +230,26 @@ public class Solver {
                         }
                     }
                 }
-
                 break;
-
-            // [DONE] ToDo: Include default condition
-            // Default variable selection order is smallest domain first
+            // Default asc
             default:
-                selectedVar = null;
-                smallest_domain = 1000;
-                // check the size of the domain for each unassigned variable
-                for (Variable v : varList) {
-                    if (!v.isAssigned()) {
-                        if (v.getDomain().length < smallest_domain) {
-                            smallest_domain = v.getDomain().length;
-                            selectedVar = v;
-                        }
+                for (int i = 0; i < varList.size(); i++) {
+                    if (!varList.get(i).isAssigned()) {
+                        selectedVar = varList.get(i);
                     }
                 }
                 break;
         }
-
         return selectedVar;
     }
 
-    /** Select a value from the domain */
-    private void selectValue(Variable v, String method) {
+    /**
+     * Select a value from the domain
+     */
+    private void selectVal(Variable var) {
     }
 
-    private void branchFCLeft(BinaryCSP csp, Variable var, int value) {
+    private void branchFCLeft(Variable var, int value) {
         // From lecture 7_1: An assigned variable has been assigned by a
         // left branch
         this.mode = 1;
@@ -317,7 +277,7 @@ public class Solver {
         System.out.println("End of branch left");
     }
 
-    private void branchFCRight(BinaryCSP csp, Variable var, int value) {
+    private void branchFCRight(Variable var, int value) {
         this.mode = 2;
         // From lecture 7_1: An assigned variable can only be assigned by branchLeft
         var.delete(value);

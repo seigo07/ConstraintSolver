@@ -54,7 +54,7 @@ public final class BinaryCSPReader {
     // System.out.println(bcsp.readBinaryCSP(args[0]));
 
     // Instantiate a Solver to run solver
-    Solver solver = new Solver(bcsp);
+    Solver solver = new Solver(bcsp, varOrder, valOrder);
     solver.run(algorithm);
     solver.printSolutions();
   }
