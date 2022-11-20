@@ -23,7 +23,7 @@ public class Solver {
      */
     public void run(String algorithm) {
         if (algorithm.contentEquals("fc")) {
-            forwardChecking(this.csp);
+            forwardChecking();
         } else if (algorithm.contentEquals("mac")) {
             mac();
         } else {
@@ -44,7 +44,7 @@ public class Solver {
     /**
      * FC: 2-way version
      */
-    public void forwardChecking(BinaryCSP csp) {
+    public void forwardChecking() {
         if (isCompleteAssignment() == true) {
             // Output solutions and finish
             printSolutions();
@@ -236,7 +236,7 @@ public class Solver {
 
             // Do forward checking on the rest of the UNASSIGNED variables
             id_sequences.clear();
-            forwardChecking(csp);
+            forwardChecking();
         }
 
         undoPruning();
@@ -259,7 +259,7 @@ public class Solver {
         if (!var.isDomainEmpty()) {
             if (reviseFutureArcs(futureVars, var) == true) { // reviseFutureArcs(ArrayList<Variable> futureVars,
                                                              // Variable v)
-                forwardChecking(csp);
+                forwardChecking();
             } else {
                 undoPruning();
             }
