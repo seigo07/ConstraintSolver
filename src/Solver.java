@@ -131,12 +131,14 @@ public class Solver {
      * FC 2-way version
      */
     public void forwardChecking() {
+        // Check if all variables are assigned
         if (completeAssignment()) {
             // Output solutions and finish
             printSolutions();
         } else {
-            // Pick var and value
+            // Get var based on varOrder
             Variable var = selectVar();
+            // Get var based on valOrder
             int val = selectVal(var);
             // Branching
             branchFCLeft(var, val);
@@ -195,7 +197,6 @@ public class Solver {
         }
         // replaces the value which was most recently removed from the domain of var
         var.undoPruning();
-
     }
 
     /**
@@ -212,6 +213,8 @@ public class Solver {
                 for (int i = 0; i < varList.size(); i++) {
                     if (!varList.get(i).isAssigned()) {
                         selectedVar = varList.get(i);
+                        System.out.println("selectedVar:" + varList.get(i).getId());
+                        break;
                     }
                 }
                 break;
@@ -272,7 +275,6 @@ public class Solver {
         ArrayList<Variable> futureVars = getFutureVars(var);
 
         if (reviseFutureArcs(futureVars, var)) {
-
             // Forward checking for the rest of the unassigned variables
             id_sequences.clear();
             forwardChecking();
@@ -281,6 +283,7 @@ public class Solver {
         // reverses the changes made by reviseFutureArcs
         undoPruning();
         var.unassign();
+
         System.out.println("End of branch left");
     }
 
@@ -302,12 +305,10 @@ public class Solver {
         if (!var.isDomainEmpty()) {
             if (reviseFutureArcs(futureVars, var)) {
                 forwardChecking();
-            } else {
-                undoPruning();
             }
-        } else {
-            var.assign(val);
+            undoPruning();
         }
+        var.assign(val);
         System.out.println("End of branch right");
     }
 
