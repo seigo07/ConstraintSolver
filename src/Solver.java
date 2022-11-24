@@ -116,15 +116,27 @@ public class Solver {
     }
 
     /**
-     * Generate solutions from variables
+     * Generate solutions from varList
      */
     public void printSolutions() {
         for (Variable v : varList) {
             this.solution.add(v.getValue());
-            System.out.println("Variable " + v.getId() + " is assigned: " + v.getValue());
+            System.out.println("var " + v.getId() + " val: " + v.getValue());
         }
-        System.out.println("The number of solution:" + this.solution.size());
-        System.out.println("solution:" + this.solution);
+        // System.out.println("solution:" + this.solution);
+    }
+
+    /**
+     * Check if all variables are assigned with values
+     */
+    private boolean completeAssignment() {
+
+        for (Variable v : varList) {
+            if (v.isAssigned() == false) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -144,19 +156,6 @@ public class Solver {
             branchFCLeft(var, val);
             branchFCRight(var, val);
         }
-    }
-
-    /**
-     * Check if all variables have been assigned with values
-     */
-    private boolean completeAssignment() {
-
-        for (Variable v : varList) {
-            if (v.isAssigned() == false) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**
@@ -200,33 +199,29 @@ public class Solver {
     }
 
     /**
-     * select an assignment variable from a varList
+     * Select an assignment variable from a varList
      */
     private Variable selectVar() {
 
         Variable selectedVar = null;
-        int smallest_domain = 1000;
 
         switch (varOrder) {
             // Ascending or first unassigned variable in the list
             case "asc":
-                for (int i = 0; i < varList.size(); i++) {
-                    if (!varList.get(i).isAssigned()) {
-                        selectedVar = varList.get(i);
-                        System.out.println("selectedVar:" + varList.get(i).getId());
+                for (Variable v : varList) {
+                    if (!v.isAssigned()) {
+                        selectedVar = v;
                         break;
                     }
                 }
                 break;
-            // Strategy d: Smallest domain first
+            // Smallest domain first
             case "sdf":
-                selectedVar = null;
-                smallest_domain = 1000;
-                // check the size of the domain for each unassigned variable
+                int smallestDomain = 1000;
                 for (Variable v : varList) {
                     if (!v.isAssigned()) {
-                        if (v.getDomain().length < smallest_domain) {
-                            smallest_domain = v.getDomain().length;
+                        if (smallestDomain > v.getDomain().length) {
+                            smallestDomain = v.getDomain().length;
                             selectedVar = v;
                         }
                     }
@@ -234,9 +229,10 @@ public class Solver {
                 break;
             // Default asc
             default:
-                for (int i = 0; i < varList.size(); i++) {
-                    if (!varList.get(i).isAssigned()) {
-                        selectedVar = varList.get(i);
+                for (Variable v : varList) {
+                    if (!v.isAssigned()) {
+                        selectedVar = v;
+                        break;
                     }
                 }
                 break;
