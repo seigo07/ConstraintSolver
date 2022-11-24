@@ -120,10 +120,10 @@ public class Solver {
      * Generate solutions from varList
      */
     public void printSolutions() {
-        this.solution.add(searchNodes);
-        this.solution.add(arcRevisions);
+        solution.add(searchNodes);
+        solution.add(arcRevisions);
         for (Variable v : varList) {
-            this.solution.add(v.getValue());
+            solution.add(v.getValue());
             System.out.println("var " + v.getId() + " val: " + v.getValue());
         }
         System.out.println("#### Output solution ####");
@@ -153,15 +153,15 @@ public class Solver {
         if (completeAssignment()) {
             // Output solutions and finish
             printSolutions();
-        } else {
-            // Get var based on varOrder
-            Variable var = selectVar();
-            // Get var based on valOrder
-            int val = selectVal(var);
-            // Branching
-            branchFCLeft(var, val);
-            branchFCRight(var, val);
+            return;
         }
+        // Get var based on varOrder
+        Variable var = selectVar();
+        // Get var based on valOrder
+        int val = selectVal(var);
+        // Branching
+        branchFCLeft(var, val);
+        branchFCRight(var, val);
     }
 
     /**
