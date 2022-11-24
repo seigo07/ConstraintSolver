@@ -7,6 +7,8 @@ public class Solver {
     private final LinkedList<Variable> pruned = new LinkedList<>();
     private ArrayList<Variable> varList;
     private ConstraintList constraintList;
+    private int searchNodes = 0;
+    private int arcRevisions = 0;
 
     public enum Branch {
         LEFT, RIGHT
@@ -118,11 +120,16 @@ public class Solver {
      * Generate solutions from varList
      */
     public void printSolutions() {
+        this.solution.add(searchNodes);
+        this.solution.add(arcRevisions);
         for (Variable v : varList) {
             this.solution.add(v.getValue());
             System.out.println("var " + v.getId() + " val: " + v.getValue());
         }
-        // System.out.println("solution:" + this.solution);
+        System.out.println("#### Output solution ####");
+        for (int s : solution) {
+            System.out.println(s);
+        }
     }
 
     /**
@@ -261,6 +268,7 @@ public class Solver {
     private void branchFCLeft(Variable var, int val) {
 
         this.branch = Branch.LEFT;
+        searchNodes++;
 
         // Assign the value
         var.assign(val);
@@ -288,6 +296,7 @@ public class Solver {
     private void branchFCRight(Variable var, int val) {
 
         this.branch = Branch.RIGHT;
+        searchNodes++;
 
         var.delete(val);
         var.savePrune();
@@ -528,6 +537,7 @@ public class Solver {
      *         arc, else false.
      */
     private boolean revise(Arc arc) {
+        this.arcRevisions++;
         boolean changed = false;
         boolean supported;
         ArrayList<Integer> supported_values_in_sv;
@@ -598,6 +608,7 @@ public class Solver {
      *         arc, else false.
      */
     private boolean revise_2(Arc arc) {
+        this.arcRevisions++;
         boolean changed = false;
         boolean supported;
         ArrayList<Integer> supported_values_in_sv;
