@@ -53,7 +53,6 @@ public class Solver {
      * Generate variables from domainBounds
      */
     public ArrayList<Variable> generateVarList(int[][] domainBounds) {
-
         ArrayList<Variable> variables = new ArrayList<Variable>();
         for (int i = 0; i < domainBounds.length; i++) {
             int[] d = IntStream.range(0, domainBounds[i][1] + 1).toArray();
@@ -158,7 +157,9 @@ public class Solver {
         // Get var based on varOrder
         Variable var = selectVar();
         // Get var based on valOrder
-        int val = selectVal(var);
+        // int val = selectVal(var);
+        int val = var.getSmallestDomain();
+        System.out.println("x" + var.getId() + " = " + val);
         // Branching
         branchFCLeft(var, val);
         branchFCRight(var, val);
@@ -258,7 +259,6 @@ public class Solver {
                 break;
             }
         }
-        System.out.println("selectVal:" + val);
         return val;
     }
 
@@ -272,12 +272,9 @@ public class Solver {
 
         // Assign the value
         var.assign(val);
-        System.out.println("Variable " + var.getId() + " is assigned " + val);
 
-        // Get future variables
-        ArrayList<Variable> futureVars = getFutureVars(var);
-
-        if (reviseFutureArcs(futureVars, var)) {
+        // Pruning possible future domains
+        if (reviseFutureArcs(var)) {
             // Forward checking for the rest of the unassigned variables
             id_sequences.clear();
             forwardChecking();
@@ -301,14 +298,9 @@ public class Solver {
         var.delete(val);
         var.savePrune();
 
-        ArrayList<Variable> futureVars = getFutureVars(var);
-
-        // for(Variable v: futureVars){
-        // v.undoMarking();
-        // }
-
         if (!var.isDomainEmpty()) {
-            if (reviseFutureArcs(futureVars, var)) {
+            // Pruning possible future domains
+            if (reviseFutureArcs(var)) {
                 forwardChecking();
             }
             undoPruning();
@@ -334,43 +326,63 @@ public class Solver {
     }
 
     /**
-     * Make the problem arc consistent for all future arcs This is done by
-     * recursively removing
-     * conflicting values on *all* connected variables Implement the AC3 algorithm
-     * here Arc
-     * consistency(definition): for every value in the domain of a variable x, there
-     * exists a value in
-     * the domain of a connected variable y that satisfies all the constraints
-     * X -> Y, Z, A
+     * Procedure for pruning possible future domains
      */
-    private boolean reviseFutureArcs(ArrayList<Variable> futureVars, Variable v) {
-        // execute the AC3 algorithm
-        // if the domain does NOT contain the currently assigned variable, reset the
-        // assignment
-        // if(!ArrayUtils.contains(v.getDomain(), v.getValue()) && consistent){
-        // v.unassign();
+    private boolean reviseFutureArcs(Variable var) {
+
+        // boolean consistent = true;
+
+        // for (Variable futureVar : varList) {
+        // if (futureVar != var) {
+        // Arc arc = new Arc(futureVar, var);
+        // consistent = revise3(arc);
+        // if (!consistent) {
+        // return false;
         // }
-        return ac3(futureVars, v);
+        // }
+        // }
+
+        // return consistent;
+
+        // Get future variables
+        ArrayList<Variable> futureVars = getFutureVars(var);
+        return ac3(futureVars, var);
     }
 
     /**
-     * Make the problem arc consistent for all arcs connected to the curernt
-     * variable we've just
-     * assigned. This is done by recursively removing conflicting values on *all*
-     * connected variables.
-     * Implement the AC3 algorithm here Arc consistency(definition): for every value
-     * in the domain of
-     * a variable x, there exists a value in the domain of a connected variable y
-     * that satisfies all
-     * the constraints
-     * x -> y, y -> x
+     * revise3
+     */
+    private boolean revise3(Arc arc) {
+        boolean changed = false;
+
+        Variable xi = arc.getFv();
+        Variable xj = arc.getSv();
+
+        System.out.println("x" + xj.getId() + " = " + xj.getValue());
+        System.out.println("x" + xi.getId() + " = " + xi.getValue());
+
+        for (int di : xi.getDomain()) {
+            for (int dj : xj.getDomain()) {
+                if ((xi.getValue() == di && xj.getValue() == dj)) {
+                    return changed;
+                }
+                xi.delete(di);
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
+
+    /**
+     * Check consistent through ac3 revises arcs algorithm
      */
     public boolean ac3(ArrayList<Variable> futureVars, Variable v) {
         boolean changed = false;
         ArcList arcList = makeArcs(v, futureVars, "from");
         Arc currentArc;
 
-        // get an arc off the queue and revise its domains
+        // Revise domains unless arcList is not empty
         while (!arcList.isEmpty()) {
             currentArc = arcList.pop();
             id_sequences.addLast(currentArc.getSv().getId());
@@ -379,53 +391,41 @@ public class Solver {
                 return false;
             }
 
-            // KEY LINE OF THIS METHOD
+            // Revise by branch direction
             switch (this.branch) {
                 case LEFT:
-                    changed = revise(currentArc);
+                    changed = reviseForBranchLeft(currentArc);
                     break;
                 case RIGHT:
-                    changed = revise_2(currentArc);
+                    changed = reviseForBranchRight(currentArc);
                     break;
             }
 
             currentArc.getSv().saveMark();
-            // if there is a change, add all arcs incident of the first variable of the arc
-            // to the queue
-            // of arcs
-            if (changed == true) {
-                // if there has been a change
 
-                // a. add the changed variable to the list of variables pruned. This will help
-                // us know which
-                // variables to undo the pruning for
+            // Add all arcs to the queue if there is a change
+            if (changed) {
+
+                // Add the changed variable to pruned var list
                 pruned.push(currentArc.getFv());
 
-                // b. check if a wipeout has occurred and if it has
-                // exit IMMEDIATELY and return the value of consistent to the calling function
-                // if (currentArc.getSv().isWipeout()) {
+                // Check if a wipeout was occurred
                 if (currentArc.getSv().isWipeout()) {
                     return false;
                 }
 
-                // If we're here, the domain of the first variable in the current arc has
-                // changed
-                // Add to the queue(arcList) all arcs(xh, xi) (h != j)
-                // find all variables incident on the first variable in the arc.i.e the left
-                // variable
+                // Get all variables incident on the first variable in the arc
                 ArrayList<Variable> connectedVars = getVariablesIncidentOn(currentArc.getFv());
 
                 // create arcs from those variables to xi and add them to the queue
-                ArcList new_arcs = makeArcs(currentArc.getFv(), connectedVars, "to");
-
-                // be sure to not add the current arc that has been popped
-                new_arcs.remove(currentArc);
+                ArcList newArcs = makeArcs(currentArc.getFv(), connectedVars, "to");
+                newArcs.remove(currentArc);
 
                 // ToDo: Ensure this function only adds unique arcs to the list
                 // add the new arcs to the queue
-                arcList.add(new_arcs);
+                arcList.add(newArcs);
             }
-        } // end while
+        }
 
         return true;
     }
@@ -525,74 +525,38 @@ public class Solver {
     }
 
     /**
-     * Revise returns true if the value of the first variable in the arc(i.e. the
-     * left variable) has
-     * been changed Assuming also that empty domains are caught.
-     * This function assumes that at the point of calling revise, the a value
-     * has been assigned to the left variable
-     *
-     * @param arc
-     * @return True if a change was made to the domain of the left variable(or first
-     *         variable) in the
-     *         arc, else false.
+     * Prune future domains if there is given variables don't satisfy any
+     * constraints
      */
-    private boolean revise(Arc arc) {
+    private boolean reviseForBranchLeft(Arc arc) {
+
         this.arcRevisions++;
         boolean changed = false;
         boolean supported;
-        ArrayList<Integer> supported_values_in_sv;
-        /**
-         * Source: https://ktiml.mff.cuni.cz/~bartak/constraints/consistent.html
-         * procedure REVISE(Vi,Vj)
-         * DELETE <- false;
-         * for each X in Di do
-         * if there is no such Y in Dj such that (X,Y) is consistent,
-         * then
-         * delete X from Di;
-         * DELETE <- true;
-         * endif
-         * endfor
-         * return DELETE;
-         * end REVISE
-         */
+        ArrayList<Integer> supportedValuesInSv;
 
-        // if domain is empty exit early
+        // Exit AC3 early if domain is empty
         if (arc.getSv().isDomainEmpty()) {
             return changed;
-        } else {
-
-            // go through every value in the domain of the first variable fv_i and check if
-            // each value has support in the
-            // domain of the second variable
-
-            // check if the value in the domain has support in the second variable
-            // supported_values_in_sv =
-            // csp.getConstraintList().getConstraintsOn(arc.getFv().getValue(), arc);
-            supported_values_in_sv = constraintList.getConstraintsOn(arc.getFv().getValue(), arc);
-
-            // the arc is consistent iff AT LEAST ONE value in "supported_values_in_sv"
-            // can be found in the domain of SV
-            supported = arc.getSv().hasSupport(supported_values_in_sv);
-
-            if (supported == false) {
-
-                // if there is no support, prune the value fv_i from the domain of the first
-                // variable
-                // arc.getFv().prune(arc.getFv().getValue()); //remove from the domain
-                arc.getFv().prune(arc.getFv().getValue());
-                changed = true;
-
-                arc.getSv().markUnsupportedValues(supported_values_in_sv);
-            }
-
-            else {
-                // removes the values which are not supported by the current value of fv from
-                // the domain of SV
-                arc.getSv().markUnsupportedValues(supported_values_in_sv);
-                // arc.getFv().saveMark();
-            }
-
         }
+
+        // Check if the value in the domain supports in the second var
+        supportedValuesInSv = constraintList.getConstraintsOn(arc.getFv().getValue(), arc);
+
+        // Check if the domain of sv at least one value
+        supported = arc.getSv().hasSupport(supportedValuesInSv);
+
+        // Pruning the value from the domain of fv if there is no support
+        if (supported == false) {
+
+            arc.getFv().prune(arc.getFv().getValue());
+            changed = true;
+            arc.getSv().markUnsupportedValues(supportedValuesInSv);
+        }
+
+        // Remove the values from the domain of sv if they are not supported by the
+        // current value of fv
+        arc.getSv().markUnsupportedValues(supportedValuesInSv);
 
         return changed;
     }
@@ -607,7 +571,7 @@ public class Solver {
      *         variable) in the
      *         arc, else false.
      */
-    private boolean revise_2(Arc arc) {
+    private boolean reviseForBranchRight(Arc arc) {
         this.arcRevisions++;
         boolean changed = false;
         boolean supported;

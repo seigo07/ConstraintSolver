@@ -226,6 +226,19 @@ public class Variable {
     }
 
     /**
+     *
+     */
+    public int getSmallestDomain() {
+        int smallestDomain = 1000;
+        for (int d : domain) {
+            if (smallestDomain > d && !this.contains(this.getPreviouslyAssigned, d) && !this.isMarked(d)) {
+                smallestDomain = d;
+            }
+        }
+        return smallestDomain;
+    }
+
+    /**
      * Checks if the domain is empty
      *
      * @return
