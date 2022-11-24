@@ -246,16 +246,15 @@ public class Solver {
      */
     private int selectVal(Variable var) {
 
-        int max = -1;
+        int val = -1;
         for (int d : var.getDomain()) {
-            if (d > max
-                    && !var.contains(var.getPreviouslyAssigned(), d)
-                    && !var.isMarked(d)) {
-
-                max = d;
+            if (d == var.getId()) {
+                val = d;
+                break;
             }
         }
-        return max;
+        System.out.println("selectVal:" + val);
+        return val;
     }
 
     /**
