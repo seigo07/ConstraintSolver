@@ -2,18 +2,17 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 public class Solver {
-    private final BinaryCSP csp;
     private final ArrayList<Integer> solution = new ArrayList<Integer>();
     private LinkedList<Integer> id_sequences = new LinkedList<>();
-    private int mode = 1;
-
-    // maintain a global list of variables that are modified during the arc revision
-    // method
     private final LinkedList<Variable> pruned = new LinkedList<>();
-    private final LinkedList<Variable> marked = new LinkedList<>();
-
     private ArrayList<Variable> varList;
     private ConstraintList constraintList;
+
+    public enum Branch {
+        LEFT, RIGHT
+    }
+
+    Branch branch;
 
     // Parameters
     String varOrder;
@@ -23,11 +22,11 @@ public class Solver {
      * Constructor
      */
     public Solver(BinaryCSP csp, String varOrder, String valOrder) {
-        this.csp = csp;
         this.varOrder = varOrder;
         this.valOrder = valOrder;
-        varList = generateVarList(csp.getDomainBounds());
-        constraintList = generateConstraintList(csp.getConstraints(), varList);
+        this.varList = generateVarList(csp.getDomainBounds());
+        this.constraintList = generateConstraintList(csp.getConstraints(), varList);
+        this.branch = Branch.LEFT;
     }
 
     /**
@@ -261,7 +260,7 @@ public class Solver {
      */
     private void branchFCLeft(Variable var, int val) {
 
-        this.mode = 1;
+        this.branch = Branch.LEFT;
 
         // Assign the value
         var.assign(val);
@@ -288,7 +287,8 @@ public class Solver {
      */
     private void branchFCRight(Variable var, int val) {
 
-        this.mode = 2;
+        this.branch = Branch.RIGHT;
+
         var.delete(val);
         var.savePrune();
 
@@ -371,10 +371,13 @@ public class Solver {
             }
 
             // KEY LINE OF THIS METHOD
-            if (this.mode == 1) {
-                changed = revise(currentArc);
-            } else {
-                changed = revise_2(currentArc);
+            switch (this.branch) {
+                case LEFT:
+                    changed = revise(currentArc);
+                    break;
+                case RIGHT:
+                    changed = revise_2(currentArc);
+                    break;
             }
 
             currentArc.getSv().saveMark();
