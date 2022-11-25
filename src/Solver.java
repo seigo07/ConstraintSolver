@@ -263,8 +263,8 @@ public class Solver {
         ArrayList<Variable> futureVars = new ArrayList<Variable>();
 
         for (Constraint c : constraintList) {
-            if (c.getFirstVar().containsKey(root)) {
-                futureVars.add(c.getSecondVariable());
+            if (c.getFirstMap().containsKey(root)) {
+                futureVars.add(c.getSecondVar());
             }
         }
         return futureVars;
@@ -510,9 +510,9 @@ public class Solver {
         ArrayList<Variable> results = new ArrayList<>();
 
         for (Constraint c : constraintList) {
-            System.out.println("getFirstVariable " + c.getFirstVariable());
-            if (c.getSecondVariable().equals(v)) {
-                results.add(c.getFirstVariable());
+            System.out.println("getFirstVariable " + c.getFirstVar());
+            if (c.getSecondVar().equals(v)) {
+                results.add(c.getFirstVar());
             }
         }
         return results;
@@ -527,10 +527,10 @@ public class Solver {
         ArrayList<Integer> supportList = new ArrayList<>();
 
         for (Constraint c : constraintList) {
-            if (c.getFirstVariable().equals(arc.getFirstVar()) && c.getSecondVariable().equals(arc.getSecondVar())) {
+            if (c.getFirstVar().equals(arc.getFirstVar()) && c.getSecondVar().equals(arc.getSecondVar())) {
 
-                int[] firstVarValues = c.getFirstVar().get(arc.getFirstVar());
-                int[] secondtVarValues = c.getSecondVar().get(arc.getSecondVar());
+                int[] firstVarValues = c.getFirstMap().get(arc.getFirstVar());
+                int[] secondtVarValues = c.getSecondMap().get(arc.getSecondVar());
 
                 for (int i = 0; i < firstVarValues.length; i++) {
                     if (firstVarValues[i] == val) {

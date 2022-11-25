@@ -3,36 +3,36 @@ import java.util.stream.Collectors;
 
 public class Constraint {
 
-    private HashMap<Variable, int[]> firstVar;
-    private HashMap<Variable, int[]> secondVar;
+    private HashMap<Variable, int[]> firstMap;
+    private HashMap<Variable, int[]> secondMap;
 
     /**
      * Constructers
      */
-    public Constraint(HashMap<Variable, int[]> firstVar, HashMap<Variable, int[]> secondVar) {
-        this.firstVar = new HashMap<>();
-        this.firstVar = firstVar;
-        this.secondVar = new HashMap<>();
-        this.secondVar = secondVar;
+    public Constraint(HashMap<Variable, int[]> firstMap, HashMap<Variable, int[]> secondMap) {
+        this.firstMap = new HashMap<>();
+        this.firstMap = firstMap;
+        this.secondMap = new HashMap<>();
+        this.secondMap = secondMap;
     }
 
     /**
      * Getters
      */
 
-    public Map<Variable, int[]> getFirstVar() {
-        return firstVar;
+    public Map<Variable, int[]> getFirstMap() {
+        return firstMap;
     }
 
-    public Map<Variable, int[]> getSecondVar() {
-        return secondVar;
+    public Map<Variable, int[]> getSecondMap() {
+        return secondMap;
     }
 
-    public Variable getFirstVariable() {
-        return firstVar.keySet().stream().collect(Collectors.toList()).get(0);
+    public Variable getFirstVar() {
+        return firstMap.keySet().stream().collect(Collectors.toList()).get(0);
     }
 
-    public Variable getSecondVariable() {
-        return secondVar.keySet().stream().collect(Collectors.toList()).get(0);
+    public Variable getSecondVar() {
+        return secondMap.keySet().stream().collect(Collectors.toList()).get(0);
     }
 }
