@@ -332,7 +332,7 @@ public class Solver {
         if (completeAssignment()) {
             printSolutions();
             return;
-        } else if (ac3()) {
+        } else if (macAc3()) {
             // Having assigned a value to a variable, reestablish AC
             mac();
         }
@@ -346,7 +346,7 @@ public class Solver {
         var.savePrune();
 
         if (!var.isDomainEmpty()) {
-            if (ac3()) {
+            if (macAc3()) {
                 mac();
             }
             // Reverse the changes made by reviseFutureArcs
@@ -361,7 +361,7 @@ public class Solver {
      */
     public boolean ac3(ArrayList<Variable> futureVars, Variable v) {
         boolean changed = false;
-        arcList = makeArcs(v, futureVars, "from");
+        arcList = createArcList(v, futureVars, "from");
         Arc currentArc;
 
         // Revise domains unless arcList is not empty
@@ -396,15 +396,14 @@ public class Solver {
                     return false;
                 }
 
-                // Get all variables incident on the first variable in the arc
-                ArrayList<Variable> connectedVars = getVariablesIncidentOn(currentArc.getFirstVar());
+                // Get all variables based on the first variable in the arc
+                ArrayList<Variable> connectedVars = getVarListBasedOnGivenVariables(currentArc.getFirstVar());
 
-                // create arcs from those variables to xi and add them to the queue
-                LinkedList<Arc> newArcList = makeArcs(currentArc.getFirstVar(), connectedVars, "to");
+                // Generate newArcList from currentArc
+                LinkedList<Arc> newArcList = createArcList(currentArc.getFirstVar(), connectedVars, "to");
                 newArcList.remove(currentArc);
 
-                // ToDo: Ensure this function only adds unique arcs to the list
-                // add the new arcs to the queue
+                // Merge current and new arcList
                 mergeArcList(newArcList);
             }
         }
@@ -424,13 +423,9 @@ public class Solver {
     }
 
     /**
-     * AC3 algorithm when no arguments are provided. In this case the goal is to
-     * enforce global arc consistency.
-     * Used for the MAC algorithm.
-     * 
-     * @return
+     * AC3 algorithm for MAC
      */
-    public boolean ac3() {
+    public boolean macAc3() {
         return false;
     }
 
@@ -456,60 +451,37 @@ public class Solver {
     }
 
     /**
-     * A utility function to create a list of arcs given the first variable and a
-     * list of variables
-     * it's connected to. It additionally also includes the reverse of the arcs For
-     * instance, after
-     * adding arc(x, y), it also adds arc(y,x)
-     *
-     * @param fv
-     * @param variableList
-     * @return a list of arcs
+     * Create an arcList with the first variable, variables, and direction
      */
-    private LinkedList<Arc> makeArcs(Variable fv, ArrayList<Variable> variableList, String direction) {
+    private LinkedList<Arc> createArcList(Variable firstVar, ArrayList<Variable> variableList, String direction) {
 
         LinkedList<Arc> arcList = new LinkedList<Arc>();
         Arc arc;
 
         if (direction.equals("to")) {
-            // create the arcs
-            for (Variable v : variableList) {
-                arc = new Arc(v, fv);
-                arcList.add(arc); // adding the arc from the the assigned variable to the connected variable
+            for (Variable var : variableList) {
+                arc = new Arc(var, firstVar);
+                arcList.add(arc);
             }
         } else if (direction.equals("from")) {
-            // create the arcs
-            for (Variable v : variableList) {
-                arc = new Arc(fv, v);
-                arcList.add(arc); // adding the arc from the the assigned variable to the connected variable
+            for (Variable var : variableList) {
+                arc = new Arc(firstVar, var);
+                arcList.add(arc);
             }
         }
-
-        // Add the reverse of each arc. For instance if we have arc(x1, x2), this method
-        // adds
-        // arc(x2, x1)
-        // ArcList reverse = new ArcList();
-        // for (Arc a : arcList) {
-        // reverse.add(a.reverse());
-        // }
-
-        // arcList.add(reverse); // adds the reversed arcs to the arcList
 
         return arcList;
     }
 
     /**
      * Gets a list of all variables that are incident on a given variable v
-     *
-     * @param v
-     * @return an arrayList of all variables incident on v
      */
-    private ArrayList<Variable> getVariablesIncidentOn(Variable v) {
+    private ArrayList<Variable> getVarListBasedOnGivenVariables(Variable var) {
+
         ArrayList<Variable> results = new ArrayList<>();
 
         for (Constraint c : constraintList) {
-            System.out.println("getFirstVariable " + c.getFirstVar());
-            if (c.getSecondVar().equals(v)) {
+            if (c.getSecondVar().equals(var)) {
                 results.add(c.getFirstVar());
             }
         }
@@ -525,6 +497,7 @@ public class Solver {
         ArrayList<Integer> supportList = new ArrayList<>();
 
         for (Constraint c : constraintList) {
+
             if (c.getFirstVar().equals(arc.getFirstVar()) && c.getSecondVar().equals(arc.getSecondVar())) {
 
                 int[] firstVarValues = c.getFirstMap().get(arc.getFirstVar());
@@ -542,8 +515,7 @@ public class Solver {
     }
 
     /**
-     * Prune future domains if there is given variables don't satisfy any
-     * constraints
+     * Check if given variables satisfy any constraints
      */
     private boolean reviseForBranchLeft(Arc arc) {
 
@@ -557,13 +529,13 @@ public class Solver {
             return changed;
         }
 
-        // Check if the value in the domain supports in the second var
+        // Check if the value in the domain supports in the secondVar
         supportedValuesInSv = getSupportList(arc.getFirstVar().getValue(), arc);
 
-        // Check if the domain of sv at least one value
+        // Check if the domain of secondVar at least one value
         supported = arc.getSecondVar().hasSupport(supportedValuesInSv);
 
-        // Pruning the value from the domain of fv if there is no support
+        // Pruning the value from the domain of firstVar if there is no support
         if (supported == false) {
 
             arc.getFirstVar().prune(arc.getFirstVar().getValue());
@@ -571,83 +543,46 @@ public class Solver {
             arc.getSecondVar().markUnsupportedValues(supportedValuesInSv);
         }
 
-        // Remove the values from the domain of sv if they are not supported by the
-        // current value of fv
+        // Remove the values from the domain of secondVar if they are not supported by
+        // the current value of firstVar
         arc.getSecondVar().markUnsupportedValues(supportedValuesInSv);
 
         return changed;
     }
 
     /**
-     * Revise returns true if the value of the first variable in the arc(i.e. the
-     * left variable) has
-     * been changed Assuming also that empty domains are caught
-     *
-     * @param arc
-     * @return True if a change was made to the domain of the left variable(or first
-     *         variable) in the
-     *         arc, else false.
+     * Check if given variables satisfy any constraints
      */
     private boolean reviseForBranchRight(Arc arc) {
+
         this.arcRevisions++;
         boolean changed = false;
         boolean supported;
-        ArrayList<Integer> supported_values_in_sv;
-        /**
-         * Source: https://ktiml.mff.cuni.cz/~bartak/constraints/consistent.html
-         * procedure REVISE(Vi,Vj)
-         * DELETE <- false;
-         * for each X in Di do
-         * if there is no such Y in Dj such that (X,Y) is consistent,
-         * then
-         * delete X from Di;
-         * DELETE <- true;
-         * endif
-         * endfor
-         * return DELETE;
-         * end REVISE
-         */
 
-        // if domain is empty exit early
+        ArrayList<Integer> supportedValuesInSecondVar;
+
+        // Exit AC3 early if domain is empty
         if (arc.getSecondVar().isDomainEmpty()) {
             return changed;
         } else {
-            // go through every value in the domain of the first variable fv_i and check if
-            // each value has support in the
-            // domain of the second variable
+            // Get all values in the domain of the firstVar and check if
+            // they support in the domain of the second variable
             int[] InDomainAndUnmarked = arc.getFirstVar().getInDomainAndUnmarked();
             if (InDomainAndUnmarked == null) {
                 return changed;
             }
 
             for (int i : arc.getFirstVar().getInDomainAndUnmarked()) {
-                // check if the value in the domain has support in the second variable
-                // supported_values_in_sv =
-                // csp.getConstraintList().getConstraintsOn(arc.getFv().getValue(), arc);
-                supported_values_in_sv = getSupportList(i, arc);
+                // Check if the value in the domain supports in the secondVar
+                supportedValuesInSecondVar = getSupportList(i, arc);
+                supported = arc.getSecondVar().hasSupport(supportedValuesInSecondVar);
 
-                // the arc is consistent iff AT LEAST ONE value in "supported_values_in_sv"
-                // can be found in the domain of SV
-                supported = arc.getSecondVar().hasSupport(supported_values_in_sv);
-
+                // Prune the domain of the firstVar if there is no support
                 if (supported == false) {
-
-                    // if there is no support, prune the value fv_i from the domain of the first
-                    // variable
-                    // arc.getFv().prune(arc.getFv().getValue()); //remove from the domain
                     arc.getFirstVar().prune(arc.getFirstVar().getValue());
                     changed = true;
-
-                    arc.getSecondVar().markUnsupportedValues(supported_values_in_sv);
+                    arc.getSecondVar().markUnsupportedValues(supportedValuesInSecondVar);
                 }
-
-                else {
-                    // removes the values which are not supported by the current value of fv from
-                    // the domain of SV
-                    // arc.getSv().markUnsupportedValues(supported_values_in_sv);
-                    // arc.getFv().saveMark();
-                }
-
             }
 
         }
