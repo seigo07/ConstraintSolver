@@ -270,7 +270,7 @@ public class Solver {
         this.branch = Branch.LEFT;
         searchNodes++;
 
-        // Assign the value
+        // Add val to var
         var.assign(val);
 
         // Pruning possible future domains
@@ -280,22 +280,24 @@ public class Solver {
             forwardChecking();
         }
 
-        // reverses the changes made by reviseFutureArcs
+        // Reverses the changes made by reviseFutureArcs
         undoPruning();
+        // Remove val from var
         var.unassign();
 
         System.out.println("End of branch left");
     }
 
     /**
-     * Assigned variables are assigned by branchFCRight
+     * BranchFCRight
      */
     private void branchFCRight(Variable var, int val) {
 
         this.branch = Branch.RIGHT;
         searchNodes++;
 
-        var.delete(val);
+        // Delete value from domain
+        var.deleteValue(val);
         var.savePrune();
 
         if (!var.isDomainEmpty()) {
@@ -366,7 +368,7 @@ public class Solver {
                 if ((xi.getValue() == di && xj.getValue() == dj)) {
                     return changed;
                 }
-                xi.delete(di);
+                xi.deleteValue(di);
                 changed = true;
             }
         }
@@ -410,7 +412,7 @@ public class Solver {
                 pruned.push(currentArc.getFv());
 
                 // Check if a wipeout was occurred
-                if (currentArc.getSv().isWipeout()) {
+                if (currentArc.getSv().isNeedCancel()) {
                     return false;
                 }
 
