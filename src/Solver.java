@@ -119,7 +119,6 @@ public class Solver {
         solution.add(arcRevisions);
         for (Variable v : varList) {
             solution.add(v.getValue());
-            System.out.println("var " + v.getId() + " val: " + v.getValue());
         }
         System.out.println("#### Output solution ####");
         for (int s : solution) {
@@ -154,7 +153,6 @@ public class Solver {
         Variable var = selectVar();
         // Get var based on valOrder
         int val = var.getSmallestDomain();
-        System.out.println("x" + var.getId() + " = " + val);
         // Branching
         branchFCLeft(var, val);
         branchFCRight(var, val);
@@ -224,8 +222,6 @@ public class Solver {
         undoPruning();
         // Remove val from var
         var.unassign();
-
-        System.out.println("End of branch left");
     }
 
     /**
@@ -249,7 +245,6 @@ public class Solver {
         }
         // Restore value to domain
         var.restoreValue(val);
-        System.out.println("End of branch right");
     }
 
     /**
@@ -273,48 +268,9 @@ public class Solver {
      */
     private boolean reviseFutureArcs(Variable var) {
 
-        // boolean consistent = true;
-
-        // for (Variable futureVar : varList) {
-        // if (futureVar != var) {
-        // Arc arc = new Arc(futureVar, var);
-        // consistent = revise3(arc);
-        // if (!consistent) {
-        // return false;
-        // }
-        // }
-        // }
-
-        // return consistent;
-
         // Get future variables
         ArrayList<Variable> futureVars = getFutureVars(var);
         return ac3(futureVars, var);
-    }
-
-    /**
-     * revise3
-     */
-    private boolean revise3(Arc arc) {
-        boolean changed = false;
-
-        Variable xi = arc.getFirstVar();
-        Variable xj = arc.getSecondVar();
-
-        System.out.println("x" + xj.getId() + " = " + xj.getValue());
-        System.out.println("x" + xi.getId() + " = " + xi.getValue());
-
-        for (int di : xi.getDomain()) {
-            for (int dj : xj.getDomain()) {
-                if ((xi.getValue() == di && xj.getValue() == dj)) {
-                    return changed;
-                }
-                xi.deleteValue(di);
-                changed = true;
-            }
-        }
-
-        return changed;
     }
 
     /**
@@ -332,7 +288,7 @@ public class Solver {
         if (completeAssignment()) {
             printSolutions();
             return;
-        } else if (macAc3()) {
+        } else if (macAc3(var)) {
             // Having assigned a value to a variable, reestablish AC
             mac();
         }
@@ -346,7 +302,7 @@ public class Solver {
         var.savePrune();
 
         if (!var.isDomainEmpty()) {
-            if (macAc3()) {
+            if (macAc3(var)) {
                 mac();
             }
             // Reverse the changes made by reviseFutureArcs
@@ -366,6 +322,7 @@ public class Solver {
 
         // Revise domains unless arcList is not empty
         while (!arcList.isEmpty()) {
+
             currentArc = arcList.pop();
             idSequences.addLast(currentArc.getSecondVar().getId());
 
@@ -391,7 +348,7 @@ public class Solver {
                 // Add the changed variable to pruned var list
                 prunedList.push(currentArc.getFirstVar());
 
-                // Check if a wipeout was occurred
+                // Check if a cancel is needed
                 if (currentArc.getSecondVar().isNeedCancel()) {
                     return false;
                 }
@@ -425,8 +382,11 @@ public class Solver {
     /**
      * AC3 algorithm for MAC
      */
-    public boolean macAc3() {
-        return false;
+    public boolean macAc3(Variable var) {
+
+        // Get future variables
+        ArrayList<Variable> futureVars = getFutureVars(var);
+        return ac3(futureVars, var);
     }
 
     /**
@@ -529,10 +489,11 @@ public class Solver {
             return changed;
         }
 
-        // Check if the value in the domain supports in the secondVar
+        // Check if the value in the domain supports in the secondVar and get support
+        // varList
         supportedValuesInSecondVar = getSupportList(arc.getFirstVar().getValue(), arc);
 
-        // Check if the domain of secondVar at least one value
+        // Check if the domain of secondVar supports at least one value
         supported = arc.getSecondVar().hasSupport(supportedValuesInSecondVar);
 
         // Pruning the value from the domain of firstVar if there is no support
@@ -564,27 +525,26 @@ public class Solver {
         // Exit AC3 early if domain is empty
         if (arc.getSecondVar().isDomainEmpty()) {
             return changed;
-        } else {
-            // Get all values in the domain of the firstVar and check if
-            // they support in the domain of the second variable
-            int[] InDomainAndUnmarked = arc.getFirstVar().getInDomainAndUnmarked();
-            if (InDomainAndUnmarked == null) {
-                return changed;
+        }
+
+        // Get all values in the domain of the firstVar and check if
+        // they support in the domain of the second variable
+        int[] InDomainAndUnmarked = arc.getFirstVar().getInDomainAndUnmarked();
+        if (InDomainAndUnmarked == null) {
+            return changed;
+        }
+
+        for (int i : InDomainAndUnmarked) {
+            // Check if the value in the domain supports in the secondVar
+            supportedValuesInSecondVar = getSupportList(i, arc);
+            supported = arc.getSecondVar().hasSupport(supportedValuesInSecondVar);
+
+            // Prune the domain of the firstVar if there is no support
+            if (supported == false) {
+                arc.getFirstVar().prune(arc.getFirstVar().getValue());
+                changed = true;
+                arc.getSecondVar().markUnsupportedValues(supportedValuesInSecondVar);
             }
-
-            for (int i : arc.getFirstVar().getInDomainAndUnmarked()) {
-                // Check if the value in the domain supports in the secondVar
-                supportedValuesInSecondVar = getSupportList(i, arc);
-                supported = arc.getSecondVar().hasSupport(supportedValuesInSecondVar);
-
-                // Prune the domain of the firstVar if there is no support
-                if (supported == false) {
-                    arc.getFirstVar().prune(arc.getFirstVar().getValue());
-                    changed = true;
-                    arc.getSecondVar().markUnsupportedValues(supportedValuesInSecondVar);
-                }
-            }
-
         }
 
         return changed;

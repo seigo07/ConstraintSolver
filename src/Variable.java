@@ -4,7 +4,6 @@ public class Variable {
 
     private int id = -1;
     private int value = -1;
-    private int depth;
     private int[] domain = null;
     private int[] assigned;
 
@@ -22,7 +21,6 @@ public class Variable {
 
     public Variable(int id, int[] d) {
         this.id = id;
-        this.depth = 0;
         this.domain = d;
     }
 
@@ -42,36 +40,12 @@ public class Variable {
         return this.domain;
     }
 
-    public int getDepth() {
-        return depth;
-    }
-
-    public List<Integer> getPrunedList() {
-        return prunedList;
-    }
-
-    public int[] getAssigned() {
-        return assigned;
-    }
-
-    public ArrayList<Integer> getMostRecentlyPruned() {
-        return this.mostRecentlyPrunedList;
-    }
-
     /**
      * Setters
      */
 
     public void setDomain(int[] domain) {
         this.domain = domain;
-    }
-
-    public void setDepth(int depth) {
-        this.depth = depth;
-    }
-
-    public void setPruned(LinkedList<Integer> pruned) {
-        this.prunedList = pruned;
     }
 
     /**
@@ -134,10 +108,13 @@ public class Variable {
 
     }
 
+    /**
+     * Get copy of the variable
+     */
     public Variable getCopy() {
-        Variable new_var = new Variable(this.id, this.domain);
-        new_var.setDomain(this.getDomain());
-        return new_var;
+        Variable newVar = new Variable(this.id, this.domain);
+        newVar.setDomain(this.getDomain());
+        return newVar;
     }
 
     /**
@@ -249,7 +226,7 @@ public class Variable {
     }
 
     /**
-     * Get the integer list which includes unmarked variables and in domain
+     * Get the integer list which includes unmarked variables and domain
      */
     public int[] getInDomainAndUnmarked() {
         int[] inDomainUnmarked = null;
