@@ -522,7 +522,7 @@ public class Solver {
         this.arcRevisions++;
         boolean changed = false;
         boolean supported;
-        ArrayList<Integer> supportedValuesInSv;
+        ArrayList<Integer> supportedValuesInSecondVar;
 
         // Exit AC3 early if domain is empty
         if (arc.getSecondVar().isDomainEmpty()) {
@@ -530,22 +530,22 @@ public class Solver {
         }
 
         // Check if the value in the domain supports in the secondVar
-        supportedValuesInSv = getSupportList(arc.getFirstVar().getValue(), arc);
+        supportedValuesInSecondVar = getSupportList(arc.getFirstVar().getValue(), arc);
 
         // Check if the domain of secondVar at least one value
-        supported = arc.getSecondVar().hasSupport(supportedValuesInSv);
+        supported = arc.getSecondVar().hasSupport(supportedValuesInSecondVar);
 
         // Pruning the value from the domain of firstVar if there is no support
         if (supported == false) {
 
             arc.getFirstVar().prune(arc.getFirstVar().getValue());
             changed = true;
-            arc.getSecondVar().markUnsupportedValues(supportedValuesInSv);
+            arc.getSecondVar().markUnsupportedValues(supportedValuesInSecondVar);
         }
 
         // Remove the values from the domain of secondVar if they are not supported by
         // the current value of firstVar
-        arc.getSecondVar().markUnsupportedValues(supportedValuesInSv);
+        arc.getSecondVar().markUnsupportedValues(supportedValuesInSecondVar);
 
         return changed;
     }
