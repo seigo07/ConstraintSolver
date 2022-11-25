@@ -5,7 +5,7 @@ public class Solver {
 
     private final ArrayList<Integer> solution = new ArrayList<Integer>();
     private ArrayList<Variable> varList;
-    private ConstraintList constraintList;
+    private ArrayList<Constraint> constraintList;
     private final LinkedList<Variable> prunedList = new LinkedList<>();
     private LinkedList<Integer> idSequences = new LinkedList<>();
     private LinkedList<Arc> arcList = new LinkedList<>();
@@ -65,10 +65,10 @@ public class Solver {
     /**
      * Generate constraintList from constraints and variables
      */
-    public ConstraintList generateConstraintList(ArrayList<BinaryConstraint> constraints,
+    public ArrayList<Constraint> generateConstraintList(ArrayList<BinaryConstraint> constraints,
             ArrayList<Variable> variables) {
 
-        ConstraintList cl = new ConstraintList();
+        ArrayList<Constraint> cl = new ArrayList<Constraint>();
 
         for (BinaryConstraint bc : constraints) {
             Variable var1 = new Variable();
@@ -245,11 +245,12 @@ public class Solver {
             // Pruning possible future domains
             if (reviseFutureArcs(var)) {
                 forwardChecking();
+            } else {
+                undoPruning();
             }
-            // Reverse the changes made by reviseFutureArcs
-            undoPruning();
+        } else {
+            var.assign(val);
         }
-        var.assign(val);
         System.out.println("End of branch right");
     }
 
@@ -509,11 +510,37 @@ public class Solver {
         ArrayList<Variable> results = new ArrayList<>();
 
         for (Constraint c : constraintList) {
+            System.out.println("getFirstVariable " + c.getFirstVariable());
             if (c.getSecondVariable().equals(v)) {
                 results.add(c.getFirstVariable());
             }
         }
         return results;
+    }
+
+    /**
+     * Add secondtVarValues to supportList if the val supports values in the domain
+     * of the secondVar
+     */
+    public ArrayList<Integer> getSupportList(int val, Arc arc) {
+
+        ArrayList<Integer> supportList = new ArrayList<>();
+
+        for (Constraint c : constraintList) {
+            if (c.getFirstVariable().equals(arc.getFirstVar()) && c.getSecondVariable().equals(arc.getSecondVar())) {
+
+                int[] firstVarValues = c.getFirstVar().get(arc.getFirstVar());
+                int[] secondtVarValues = c.getSecondVar().get(arc.getSecondVar());
+
+                for (int i = 0; i < firstVarValues.length; i++) {
+                    if (firstVarValues[i] == val) {
+                        supportList.add(secondtVarValues[i]);
+                    }
+                }
+            }
+        }
+
+        return supportList;
     }
 
     /**
@@ -533,7 +560,7 @@ public class Solver {
         }
 
         // Check if the value in the domain supports in the second var
-        supportedValuesInSv = constraintList.getConstraintsOn(arc.getFirstVar().getValue(), arc);
+        supportedValuesInSv = getSupportList(arc.getFirstVar().getValue(), arc);
 
         // Check if the domain of sv at least one value
         supported = arc.getSecondVar().hasSupport(supportedValuesInSv);
@@ -599,7 +626,7 @@ public class Solver {
                 // check if the value in the domain has support in the second variable
                 // supported_values_in_sv =
                 // csp.getConstraintList().getConstraintsOn(arc.getFv().getValue(), arc);
-                supported_values_in_sv = constraintList.getConstraintsOn(i, arc);
+                supported_values_in_sv = getSupportList(i, arc);
 
                 // the arc is consistent iff AT LEAST ONE value in "supported_values_in_sv"
                 // can be found in the domain of SV
