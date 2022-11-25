@@ -35,6 +35,7 @@ public final class BinaryCSP {
     return constraints;
   }
 
+  // Additional
   public int[][] getDomainBounds() {
     return domainBounds;
   }

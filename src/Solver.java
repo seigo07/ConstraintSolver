@@ -94,7 +94,7 @@ public class Solver {
             for (int counter = 0; counter < bc.getTuples().size(); counter++) {
                 int i = -1;
                 String[] ret = null;
-                ret = bc.getTuples().get(counter).toString2().split(",");
+                ret = bc.getTuples().get(counter).toStringByComma().split(",");
                 i = Integer.parseInt(ret[0]);
                 ValuesInVar1[counter] = i;
                 ValuesInVar2[counter] = (Integer.parseInt(ret[1]));
@@ -153,7 +153,6 @@ public class Solver {
         // Get var based on varOrder
         Variable var = selectVar();
         // Get var based on valOrder
-        // int val = selectVal(var);
         int val = var.getSmallestDomain();
         System.out.println("x" + var.getId() + " = " + val);
         // Branching
@@ -245,12 +244,11 @@ public class Solver {
             // Pruning possible future domains
             if (reviseFutureArcs(var)) {
                 forwardChecking();
-            } else {
-                undoPruning();
             }
-        } else {
-            var.assign(val);
+            undoPruning();
         }
+        // Restore value to domain
+        var.restoreValue(val);
         System.out.println("End of branch right");
     }
 

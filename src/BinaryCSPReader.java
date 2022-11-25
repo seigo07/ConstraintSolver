@@ -43,15 +43,9 @@ public final class BinaryCSPReader {
     String varOrder = args[2];
     String valOrder = args[3];
 
-    // System.out.println("fileName=" + fileName);
-    // System.out.println("algorithm=" + algorithm);
-    // System.out.println("varOrder=" + varOrder);
-    // System.out.println("valOrder=" + valOrder);
-
     // Instantiate a BinaryCSP through BinaryCSPReader
     BinaryCSPReader bcspr = new BinaryCSPReader();
     BinaryCSP bcsp = bcspr.readBinaryCSP(fileName);
-    // System.out.println(bcsp.readBinaryCSP(args[0]));
 
     // Instantiate a Solver to run solver
     Solver solver = new Solver(bcsp, varOrder, valOrder);

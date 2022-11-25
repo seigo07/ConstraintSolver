@@ -18,7 +18,7 @@ public final class BinaryConstraint {
     return result.toString();
   }
 
-  // NEWS
+  // Additional
   public int getFirstVar() {
     return firstVar;
   }
