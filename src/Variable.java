@@ -79,7 +79,7 @@ public class Variable {
      */
     public void assign(int value) {
         this.value = value;
-        assigned = this.add(assigned, value);
+        assigned = Utils.add(assigned, value);
     }
 
     /**
@@ -93,14 +93,14 @@ public class Variable {
      * Delete a value from the domain
      */
     public void deleteValue(int value) {
-        this.domain = this.removeElement(this.domain, value);
+        this.domain = Utils.removeElement(this.domain, value);
     }
 
     /**
      * Restore a pruned value to the domain
      */
     public void restoreValue(int val) {
-        this.domain = this.add(this.domain, val);
+        this.domain = Utils.add(this.domain, val);
         Arrays.sort(domain);
     }
 
@@ -108,7 +108,7 @@ public class Variable {
      * Removes a value from the domain and add it to the prune list
      */
     public void prune(int d) {
-        this.domain = this.removeElement(this.domain, d);
+        this.domain = Utils.removeElement(this.domain, d);
         this.prunedList.add(d);
     }
 
@@ -145,7 +145,7 @@ public class Variable {
      */
     public void undoPruning() {
         int popped = this.prunedList.remove(prunedList.size() - 1);
-        this.domain = this.add(this.domain, popped);
+        this.domain = Utils.add(this.domain, popped);
     }
 
     /**
@@ -175,7 +175,7 @@ public class Variable {
     public int getSmallestDomain() {
         int smallestDomain = 1000;
         for (int d : domain) {
-            if (smallestDomain > d && !this.contains(this.assigned, d) && !this.isMarked(d)) {
+            if (smallestDomain > d && !Utils.contains(this.assigned, d) && !this.isMarked(d)) {
                 smallestDomain = d;
             }
         }
@@ -219,7 +219,7 @@ public class Variable {
      * Check if the domain include the value
      */
     public boolean hasSupport(int value) {
-        return this.contains(this.domain, value);
+        return Utils.contains(this.domain, value);
     }
 
     /**
@@ -229,7 +229,7 @@ public class Variable {
         int intersection_count = 0;
 
         for (int s : supports) {
-            if (this.contains(this.domain, s) && !isMarked(s)) {
+            if (Utils.contains(this.domain, s) && !isMarked(s)) {
                 intersection_count += 1;
             }
         }
@@ -256,44 +256,11 @@ public class Variable {
 
         for (int d : domain) {
             if (!isMarked(d)) {
-                inDomainUnmarked = this.add(inDomainUnmarked, d);
+                inDomainUnmarked = Utils.add(inDomainUnmarked, d);
             }
         }
 
         return inDomainUnmarked;
 
-    }
-
-    /**
-     * Utils functions for array
-     */
-    public boolean contains(int[] arr, int val) {
-        return arr == null ? false : Arrays.stream(arr).anyMatch(i -> i == val);
-    }
-
-    public int[] add(int[] arr, int newVal) {
-        if (arr == null) {
-            int[] newArr = { newVal };
-            return newArr;
-        } else {
-            int[] newArr = Arrays.copyOf(arr, arr.length + 1);
-            newArr[arr.length] = newVal;
-            return newArr;
-        }
-    }
-
-    public int[] removeElement(int[] arr, int deleteVal) {
-        if (arr == null) {
-            return null;
-        }
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i] == deleteVal) {
-                int[] copy = new int[arr.length - 1];
-                System.arraycopy(arr, 0, copy, 0, i);
-                System.arraycopy(arr, i + 1, copy, i, arr.length - i - 1);
-                return copy;
-            }
-        }
-        return arr;
     }
 }
