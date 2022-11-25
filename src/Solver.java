@@ -3,8 +3,8 @@ import java.util.stream.IntStream;
 
 public class Solver {
     private final ArrayList<Integer> solution = new ArrayList<Integer>();
-    private LinkedList<Integer> id_sequences = new LinkedList<>();
-    private final LinkedList<Variable> pruned = new LinkedList<>();
+    private LinkedList<Integer> idSequences = new LinkedList<>();
+    private final LinkedList<Variable> prunedList = new LinkedList<>();
     private ArrayList<Variable> varList;
     private ConstraintList constraintList;
     private int searchNodes = 0;
@@ -276,7 +276,7 @@ public class Solver {
         // Pruning possible future domains
         if (reviseFutureArcs(var)) {
             // Forward checking for the rest of the unassigned variables
-            id_sequences.clear();
+            idSequences.clear();
             forwardChecking();
         }
 
@@ -387,7 +387,7 @@ public class Solver {
         // Revise domains unless arcList is not empty
         while (!arcList.isEmpty()) {
             currentArc = arcList.pop();
-            id_sequences.addLast(currentArc.getSv().getId());
+            idSequences.addLast(currentArc.getSv().getId());
 
             if (currentArc.getFv().getInDomainAndUnmarked() == null) {
                 return false;
@@ -409,7 +409,7 @@ public class Solver {
             if (changed) {
 
                 // Add the changed variable to pruned var list
-                pruned.push(currentArc.getFv());
+                prunedList.push(currentArc.getFv());
 
                 // Check if a wipeout was occurred
                 if (currentArc.getSv().isNeedCancel()) {
@@ -448,21 +448,21 @@ public class Solver {
      */
     private void undoPruning() {
         Variable v;
-        for (int i = pruned.size() - 1; i >= 0; i--) {
-            v = pruned.remove(i);
+        for (int i = prunedList.size() - 1; i >= 0; i--) {
+            v = prunedList.remove(i);
             v.undoPruning();
         }
 
-        for (int i = 0; i < id_sequences.size(); i++) {
+        for (int i = 0; i < idSequences.size(); i++) {
             for (Variable vv : varList) {
-                if (id_sequences.getLast() == vv.getId()) {
+                if (idSequences.getLast() == vv.getId()) {
                     vv.undoMarking();
                 }
             }
         }
 
         // ToDo: clear the id_sequnces arrayList
-        id_sequences.clear();
+        idSequences.clear();
 
         // this.pruned.clear(); // clear the contents of the list of pruned variables
     }
