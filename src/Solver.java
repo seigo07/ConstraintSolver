@@ -4,10 +4,11 @@ import java.util.stream.IntStream;
 public class Solver {
 
     private final ArrayList<Integer> solution = new ArrayList<Integer>();
-    private LinkedList<Integer> idSequences = new LinkedList<>();
-    private final LinkedList<Variable> prunedList = new LinkedList<>();
     private ArrayList<Variable> varList;
     private ConstraintList constraintList;
+    private final LinkedList<Variable> prunedList = new LinkedList<>();
+    private LinkedList<Integer> idSequences = new LinkedList<>();
+    private LinkedList<Arc> arcList = new LinkedList<>();
     private int searchNodes = 0;
     private int arcRevisions = 0;
 
@@ -361,7 +362,7 @@ public class Solver {
      */
     public boolean ac3(ArrayList<Variable> futureVars, Variable v) {
         boolean changed = false;
-        ArcList arcList = makeArcs(v, futureVars, "from");
+        arcList = makeArcs(v, futureVars, "from");
         Arc currentArc;
 
         // Revise domains unless arcList is not empty
@@ -400,16 +401,27 @@ public class Solver {
                 ArrayList<Variable> connectedVars = getVariablesIncidentOn(currentArc.getFirstVar());
 
                 // create arcs from those variables to xi and add them to the queue
-                ArcList newArcs = makeArcs(currentArc.getFirstVar(), connectedVars, "to");
-                newArcs.remove(currentArc);
+                LinkedList<Arc> newArcList = makeArcs(currentArc.getFirstVar(), connectedVars, "to");
+                newArcList.remove(currentArc);
 
                 // ToDo: Ensure this function only adds unique arcs to the list
                 // add the new arcs to the queue
-                arcList.add(newArcs);
+                mergeArcList(newArcList);
             }
         }
 
         return true;
+    }
+
+    /**
+     * Add another arcList to this arcList
+     */
+    public void mergeArcList(LinkedList<Arc> al) {
+        for (Arc arc : al) {
+            if (arc != null) {
+                arcList.add(arc);
+            }
+        }
     }
 
     /**
@@ -455,8 +467,9 @@ public class Solver {
      * @param variableList
      * @return a list of arcs
      */
-    private ArcList makeArcs(Variable fv, ArrayList<Variable> variableList, String direction) {
-        ArcList arcList = new ArcList();
+    private LinkedList<Arc> makeArcs(Variable fv, ArrayList<Variable> variableList, String direction) {
+
+        LinkedList<Arc> arcList = new LinkedList<Arc>();
         Arc arc;
 
         if (direction.equals("to")) {
