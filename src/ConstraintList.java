@@ -38,8 +38,8 @@ public class ConstraintList extends ArrayList<Constraint> {
         for (Constraint c : this) {
             if (c.getFirstVariable().equals(a.getFirstVar()) && c.getSecondVariable().equals(a.getSecondVar())) {
 
-                int[] fv_vals = c.getFv().get(a.getFirstVar());
-                int[] sv_vals = c.getSv().get(a.getSecondVar());
+                int[] fv_vals = c.getFirstVar().get(a.getFirstVar());
+                int[] sv_vals = c.getSecondVar().get(a.getSecondVar());
 
                 for (int counter = 0; counter < fv_vals.length; counter++) {
                     if (fv_vals[counter] == i) {

@@ -262,7 +262,7 @@ public class Solver {
         ArrayList<Variable> futureVars = new ArrayList<Variable>();
 
         for (Constraint c : constraintList) {
-            if (c.getFv().containsKey(root)) {
+            if (c.getFirstVar().containsKey(root)) {
                 futureVars.add(c.getSecondVariable());
             }
         }

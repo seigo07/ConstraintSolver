@@ -2,35 +2,37 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Constraint {
-    // The use of variable names fv and sv is consistent with the use of the same
-    // variable naming scheme
-    // in the other java source file provided for this assignment.
-    // FV: first variable.i.e. the variable on the left of an equation
-    // SV: second variable.i.e the variable on the right of an equation
 
-    private HashMap<Variable, int[]> fv;
-    private HashMap<Variable, int[]> sv;
+    private HashMap<Variable, int[]> firstVar;
+    private HashMap<Variable, int[]> secondVar;
 
-    public Constraint(HashMap<Variable, int[]> fv, HashMap<Variable, int[]> sv) {
-        this.fv = new HashMap<>();
-        this.fv = fv;
-        this.sv = new HashMap<>();
-        this.sv = sv;
+    /**
+     * Constructers
+     */
+    public Constraint(HashMap<Variable, int[]> firstVar, HashMap<Variable, int[]> secondVar) {
+        this.firstVar = new HashMap<>();
+        this.firstVar = firstVar;
+        this.secondVar = new HashMap<>();
+        this.secondVar = secondVar;
     }
 
-    public Map<Variable, int[]> getFv() {
-        return fv;
+    /**
+     * Getters
+     */
+
+    public Map<Variable, int[]> getFirstVar() {
+        return firstVar;
     }
 
-    public Map<Variable, int[]> getSv() {
-        return sv;
+    public Map<Variable, int[]> getSecondVar() {
+        return secondVar;
     }
 
     public Variable getFirstVariable() {
-        return fv.keySet().stream().collect(Collectors.toList()).get(0);
+        return firstVar.keySet().stream().collect(Collectors.toList()).get(0);
     }
 
     public Variable getSecondVariable() {
-        return sv.keySet().stream().collect(Collectors.toList()).get(0);
+        return secondVar.keySet().stream().collect(Collectors.toList()).get(0);
     }
 }
