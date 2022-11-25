@@ -36,10 +36,10 @@ public class ConstraintList extends ArrayList<Constraint> {
         ArrayList<Integer> supports = new ArrayList<>();
 
         for (Constraint c : this) {
-            if (c.getFirstVariable().equals(a.getFv()) && c.getSecondVariable().equals(a.getSv())) {
+            if (c.getFirstVariable().equals(a.getFirstVar()) && c.getSecondVariable().equals(a.getSecondVar())) {
 
-                int[] fv_vals = c.getFv().get(a.getFv());
-                int[] sv_vals = c.getSv().get(a.getSv());
+                int[] fv_vals = c.getFv().get(a.getFirstVar());
+                int[] sv_vals = c.getSv().get(a.getSecondVar());
 
                 for (int counter = 0; counter < fv_vals.length; counter++) {
                     if (fv_vals[counter] == i) {

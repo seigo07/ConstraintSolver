@@ -143,9 +143,9 @@ public class Variable {
     /**
      * Reverses the changes made by reviseFutureArcs
      */
-    public void undoPruning() {
-        int popped = this.prunedList.remove(prunedList.size() - 1);
-        this.domain = Utils.add(this.domain, popped);
+    public void replaceVal() {
+        int val = this.prunedList.remove(prunedList.size() - 1);
+        this.domain = Utils.add(this.domain, val);
     }
 
     /**

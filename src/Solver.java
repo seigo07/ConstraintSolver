@@ -2,6 +2,7 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 public class Solver {
+
     private final ArrayList<Integer> solution = new ArrayList<Integer>();
     private LinkedList<Integer> idSequences = new LinkedList<>();
     private final LinkedList<Variable> prunedList = new LinkedList<>();
@@ -43,9 +44,6 @@ public class Solver {
             case "mac":
                 mac();
                 break;
-            default:
-                forwardChecking();
-                break;
         }
     }
 
@@ -53,14 +51,14 @@ public class Solver {
      * Generate variables from domainBounds
      */
     public ArrayList<Variable> generateVarList(int[][] domainBounds) {
-        ArrayList<Variable> variables = new ArrayList<Variable>();
+
+        ArrayList<Variable> varList = new ArrayList<Variable>();
         for (int i = 0; i < domainBounds.length; i++) {
             int[] d = IntStream.range(0, domainBounds[i][1] + 1).toArray();
             Variable v = new Variable(i, d);
-            variables.add(v);
+            varList.add(v);
         }
-
-        return variables;
+        return varList;
     }
 
     /**
@@ -68,44 +66,41 @@ public class Solver {
      */
     public ConstraintList generateConstraintList(ArrayList<BinaryConstraint> constraints,
             ArrayList<Variable> variables) {
+
         ConstraintList cl = new ConstraintList();
 
-        for (BinaryConstraint b : constraints) {
+        for (BinaryConstraint bc : constraints) {
             Variable var1 = new Variable();
             Variable var2 = new Variable();
 
             HashMap<Variable, int[]> v1 = new HashMap<>();
             HashMap<Variable, int[]> v2 = new HashMap<>();
 
-            for (Variable v11 : variables) {
-                if (v11.getId() == b.getFirstVar()) {
-                    var1 = v11;
+            for (Variable var : variables) {
+                if (var.getId() == bc.getFirstVar()) {
+                    var1 = var;
                 }
 
-                if (v11.getId() == b.getSecondVar()) {
-                    var2 = v11.getCopy();
-                    var2 = v11;
+                if (var.getId() == bc.getSecondVar()) {
+                    var2 = var.getCopy();
+                    var2 = var;
                 }
             }
 
-            int[] var1Values = new int[b.getTuples().size()];
-            int[] var2Values = new int[b.getTuples().size()];
+            int[] ValuesInVar1 = new int[bc.getTuples().size()];
+            int[] ValuesInVar2 = new int[bc.getTuples().size()];
 
-            /*
-             * ToDo: Make sure that when adding the domain values, each value is a unique
-             * objects
-             */
-            for (int counter = 0; counter < b.getTuples().size(); counter++) {
+            for (int counter = 0; counter < bc.getTuples().size(); counter++) {
                 int i = -1;
                 String[] ret = null;
-                ret = b.getTuples().get(counter).toString2().split(",");
+                ret = bc.getTuples().get(counter).toString2().split(",");
                 i = Integer.parseInt(ret[0]);
-                var1Values[counter] = i;
-                var2Values[counter] = (Integer.parseInt(ret[1]));
+                ValuesInVar1[counter] = i;
+                ValuesInVar2[counter] = (Integer.parseInt(ret[1]));
             }
 
-            v1.put(var1, var1Values);
-            v2.put(var2, var2Values);
+            v1.put(var1, ValuesInVar1);
+            v2.put(var2, ValuesInVar2);
 
             Constraint c = new Constraint(v1, v2);
 
@@ -166,46 +161,6 @@ public class Solver {
     }
 
     /**
-     * Maintaining arc consistency
-     */
-    public void mac() {
-
-        // Get a value from varList and a value from its domain
-        Variable var = selectVar();
-        int val = selectVal(var);
-        var.assign(val);
-
-        if (completeAssignment()) {
-            printSolutions();
-        }
-        // if problem is arc consistent, recursively call MAC again
-        // I don't provide a list of variables as an argument because the selectVariable
-        // method does that at the
-        // start of the MAC method
-        else if (ac3()) {
-            mac();
-        }
-
-        // If we're in this branch, then the problem is not arc consistent
-        undoPruning();
-        var.unassign();
-        // this has the same function of removing the value from the domain of the
-        // variable
-        var.prune(val);
-        // remember to call this function after all pruning is done
-        var.savePrune();
-
-        if (!var.isDomainEmpty()) {
-            if (ac3()) {
-                mac();
-            }
-            undoPruning();
-        }
-        // replaces the value which was most recently removed from the domain of var
-        var.undoPruning();
-    }
-
-    /**
      * Select an assignment variable from a varList
      */
     private Variable selectVar() {
@@ -248,21 +203,6 @@ public class Solver {
     }
 
     /**
-     * Select a value from the domain
-     */
-    private int selectVal(Variable var) {
-
-        int val = -1;
-        for (int d : var.getDomain()) {
-            if (d == var.getId()) {
-                val = d;
-                break;
-            }
-        }
-        return val;
-    }
-
-    /**
      * Assigned variables are assigned by branchFCLeft
      */
     private void branchFCLeft(Variable var, int val) {
@@ -280,7 +220,7 @@ public class Solver {
             forwardChecking();
         }
 
-        // Reverses the changes made by reviseFutureArcs
+        // Reverse the changes made by reviseFutureArcs
         undoPruning();
         // Remove val from var
         var.unassign();
@@ -305,6 +245,7 @@ public class Solver {
             if (reviseFutureArcs(var)) {
                 forwardChecking();
             }
+            // Reverse the changes made by reviseFutureArcs
             undoPruning();
         }
         var.assign(val);
@@ -357,8 +298,8 @@ public class Solver {
     private boolean revise3(Arc arc) {
         boolean changed = false;
 
-        Variable xi = arc.getFv();
-        Variable xj = arc.getSv();
+        Variable xi = arc.getFirstVar();
+        Variable xj = arc.getSecondVar();
 
         System.out.println("x" + xj.getId() + " = " + xj.getValue());
         System.out.println("x" + xi.getId() + " = " + xi.getValue());
@@ -377,6 +318,45 @@ public class Solver {
     }
 
     /**
+     * Maintaining arc consistency
+     */
+    public void mac() {
+
+        // Get a value from varList and a value from domain
+        Variable var = selectVar();
+        int val = var.getSmallestDomain();
+
+        // Add val to var
+        var.assign(val);
+
+        if (completeAssignment()) {
+            printSolutions();
+            return;
+        } else if (ac3()) {
+            // Having assigned a value to a variable, reestablish AC
+            mac();
+        }
+
+        // Reverse the changes made by reviseFutureArcs
+        undoPruning();
+        // Remove val from var
+        var.unassign();
+        // Removing val from domain
+        var.prune(val);
+        var.savePrune();
+
+        if (!var.isDomainEmpty()) {
+            if (ac3()) {
+                mac();
+            }
+            // Reverse the changes made by reviseFutureArcs
+            undoPruning();
+        }
+        // Replace the most recently removed value
+        var.replaceVal();
+    }
+
+    /**
      * Check consistent through ac3 revises arcs algorithm
      */
     public boolean ac3(ArrayList<Variable> futureVars, Variable v) {
@@ -387,9 +367,9 @@ public class Solver {
         // Revise domains unless arcList is not empty
         while (!arcList.isEmpty()) {
             currentArc = arcList.pop();
-            idSequences.addLast(currentArc.getSv().getId());
+            idSequences.addLast(currentArc.getSecondVar().getId());
 
-            if (currentArc.getFv().getInDomainAndUnmarked() == null) {
+            if (currentArc.getFirstVar().getInDomainAndUnmarked() == null) {
                 return false;
             }
 
@@ -403,24 +383,24 @@ public class Solver {
                     break;
             }
 
-            currentArc.getSv().saveMark();
+            currentArc.getSecondVar().saveMark();
 
             // Add all arcs to the queue if there is a change
             if (changed) {
 
                 // Add the changed variable to pruned var list
-                prunedList.push(currentArc.getFv());
+                prunedList.push(currentArc.getFirstVar());
 
                 // Check if a wipeout was occurred
-                if (currentArc.getSv().isNeedCancel()) {
+                if (currentArc.getSecondVar().isNeedCancel()) {
                     return false;
                 }
 
                 // Get all variables incident on the first variable in the arc
-                ArrayList<Variable> connectedVars = getVariablesIncidentOn(currentArc.getFv());
+                ArrayList<Variable> connectedVars = getVariablesIncidentOn(currentArc.getFirstVar());
 
                 // create arcs from those variables to xi and add them to the queue
-                ArcList newArcs = makeArcs(currentArc.getFv(), connectedVars, "to");
+                ArcList newArcs = makeArcs(currentArc.getFirstVar(), connectedVars, "to");
                 newArcs.remove(currentArc);
 
                 // ToDo: Ensure this function only adds unique arcs to the list
@@ -450,7 +430,7 @@ public class Solver {
         Variable v;
         for (int i = prunedList.size() - 1; i >= 0; i--) {
             v = prunedList.remove(i);
-            v.undoPruning();
+            v.replaceVal();
         }
 
         for (int i = 0; i < idSequences.size(); i++) {
@@ -461,10 +441,7 @@ public class Solver {
             }
         }
 
-        // ToDo: clear the id_sequnces arrayList
         idSequences.clear();
-
-        // this.pruned.clear(); // clear the contents of the list of pruned variables
     }
 
     /**
@@ -538,27 +515,27 @@ public class Solver {
         ArrayList<Integer> supportedValuesInSv;
 
         // Exit AC3 early if domain is empty
-        if (arc.getSv().isDomainEmpty()) {
+        if (arc.getSecondVar().isDomainEmpty()) {
             return changed;
         }
 
         // Check if the value in the domain supports in the second var
-        supportedValuesInSv = constraintList.getConstraintsOn(arc.getFv().getValue(), arc);
+        supportedValuesInSv = constraintList.getConstraintsOn(arc.getFirstVar().getValue(), arc);
 
         // Check if the domain of sv at least one value
-        supported = arc.getSv().hasSupport(supportedValuesInSv);
+        supported = arc.getSecondVar().hasSupport(supportedValuesInSv);
 
         // Pruning the value from the domain of fv if there is no support
         if (supported == false) {
 
-            arc.getFv().prune(arc.getFv().getValue());
+            arc.getFirstVar().prune(arc.getFirstVar().getValue());
             changed = true;
-            arc.getSv().markUnsupportedValues(supportedValuesInSv);
+            arc.getSecondVar().markUnsupportedValues(supportedValuesInSv);
         }
 
         // Remove the values from the domain of sv if they are not supported by the
         // current value of fv
-        arc.getSv().markUnsupportedValues(supportedValuesInSv);
+        arc.getSecondVar().markUnsupportedValues(supportedValuesInSv);
 
         return changed;
     }
@@ -594,18 +571,18 @@ public class Solver {
          */
 
         // if domain is empty exit early
-        if (arc.getSv().isDomainEmpty()) {
+        if (arc.getSecondVar().isDomainEmpty()) {
             return changed;
         } else {
             // go through every value in the domain of the first variable fv_i and check if
             // each value has support in the
             // domain of the second variable
-            int[] InDomainAndUnmarked = arc.getFv().getInDomainAndUnmarked();
+            int[] InDomainAndUnmarked = arc.getFirstVar().getInDomainAndUnmarked();
             if (InDomainAndUnmarked == null) {
                 return changed;
             }
 
-            for (int i : arc.getFv().getInDomainAndUnmarked()) {
+            for (int i : arc.getFirstVar().getInDomainAndUnmarked()) {
                 // check if the value in the domain has support in the second variable
                 // supported_values_in_sv =
                 // csp.getConstraintList().getConstraintsOn(arc.getFv().getValue(), arc);
@@ -613,17 +590,17 @@ public class Solver {
 
                 // the arc is consistent iff AT LEAST ONE value in "supported_values_in_sv"
                 // can be found in the domain of SV
-                supported = arc.getSv().hasSupport(supported_values_in_sv);
+                supported = arc.getSecondVar().hasSupport(supported_values_in_sv);
 
                 if (supported == false) {
 
                     // if there is no support, prune the value fv_i from the domain of the first
                     // variable
                     // arc.getFv().prune(arc.getFv().getValue()); //remove from the domain
-                    arc.getFv().prune(arc.getFv().getValue());
+                    arc.getFirstVar().prune(arc.getFirstVar().getValue());
                     changed = true;
 
-                    arc.getSv().markUnsupportedValues(supported_values_in_sv);
+                    arc.getSecondVar().markUnsupportedValues(supported_values_in_sv);
                 }
 
                 else {
