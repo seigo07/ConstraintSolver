@@ -10,7 +10,6 @@ Employing 2-way branching with both the Forward Checking and the Maintaining Arc
 
 ### Dependencies
 
-* MacOS Ventura 13.0
 * Java Version: openjdk 19.0.1
 
 ### Executing program
