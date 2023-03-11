@@ -15,5 +15,6 @@ Employing 2-way branching with both the Forward Checking and the Maintaining Arc
 * Please run the following command
 ```
 cd ConstraintSolver/src
-jar -cvfm outputs/P2.jar outputs/p2.mf *.class
+javac Solver.java BinaryCSPReader.java
+jar -cvfm outputs/ConstraintSolver.jar outputs/ConstraintSolver.mf *.class 
 ```
