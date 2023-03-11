@@ -1,8 +1,6 @@
-# CS4402 Practical 2
+## Description
 
 Constraint solver for binary constraints.
-
-## Description
 
 Employing 2-way branching with both the Forward Checking and the Maintaining Arc Consistency algorithms.
 
@@ -16,6 +14,6 @@ Employing 2-way branching with both the Forward Checking and the Maintaining Arc
 
 * Please run the following command
 ```
-cd P2/src
+cd ConstraintSolver/src
 jar -cvfm outputs/P2.jar outputs/p2.mf *.class
 ```
