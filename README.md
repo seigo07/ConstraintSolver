@@ -14,7 +14,7 @@ Employing 2-way branching with both the Forward Checking and the Maintaining Arc
 
 * Java Version: openjdk 19.0.1
 
-### Executing program
+### Running program
 
 * Please run the following command
 ```
